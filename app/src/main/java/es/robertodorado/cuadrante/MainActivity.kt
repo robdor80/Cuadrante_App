@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import es.robertodorado.cuadrante.data.local.AppSettingsRepository
 import es.robertodorado.cuadrante.data.local.appSettingsDataStore
 import es.robertodorado.cuadrante.ui.CuadranteApp
+import es.robertodorado.cuadrante.ui.calendar.CalendarViewModel
 import es.robertodorado.cuadrante.ui.settings.SettingsViewModel
 import es.robertodorado.cuadrante.ui.theme.CuadranteTheme
 
@@ -24,7 +25,11 @@ class MainActivity : ComponentActivity() {
                 val settingsViewModel: SettingsViewModel = viewModel(
                     factory = SettingsViewModel.factory(settingsRepository),
                 )
-                CuadranteApp(viewModel = settingsViewModel)
+                val calendarViewModel: CalendarViewModel = viewModel()
+                CuadranteApp(
+                    settingsViewModel = settingsViewModel,
+                    calendarViewModel = calendarViewModel,
+                )
             }
         }
     }

@@ -30,11 +30,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -45,8 +47,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import es.robertodorado.cuadrante.R
+import es.robertodorado.cuadrante.calculation.ShiftCalculator
 import es.robertodorado.cuadrante.model.ShiftPatternType
 import es.robertodorado.cuadrante.model.ShiftType
+import es.robertodorado.cuadrante.ui.calendar.CalendarScreen
+import es.robertodorado.cuadrante.ui.calendar.CalendarViewModel
+import es.robertodorado.cuadrante.ui.calendar.MonthlyCalendarGenerator
 import es.robertodorado.cuadrante.ui.settings.SaveResult
 import es.robertodorado.cuadrante.ui.settings.SettingsUiState
 import es.robertodorado.cuadrante.ui.settings.SettingsViewModel
@@ -61,27 +67,73 @@ import java.util.Locale
 
 @Composable
 fun CuadranteApp(
-    viewModel: SettingsViewModel,
+    settingsViewModel: SettingsViewModel,
+    calendarViewModel: CalendarViewModel,
     modifier: Modifier = Modifier,
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by settingsViewModel.uiState.collectAsState()
+    val visibleMonth by calendarViewModel.visibleMonth.collectAsState()
+    var showSettings by rememberSaveable { mutableStateOf(false) }
 
-    SettingsScreen(
-        uiState = uiState,
-        onPatternSelected = viewModel::selectPattern,
-        onShiftAdded = viewModel::addShift,
-        onRemoveLast = viewModel::removeLastShift,
-        onClear = viewModel::clearCustomShifts,
-        onReferenceDateSelected = viewModel::setReferenceDate,
-        onSave = viewModel::save,
-        modifier = modifier,
-    )
+    LaunchedEffect(uiState.saveResult, uiState.savedSettings) {
+        if (uiState.saveResult == SaveResult.SUCCESS && uiState.savedSettings != null) {
+            showSettings = false
+        }
+    }
+
+    when {
+        uiState.isLoading -> {
+            Box(
+                modifier = modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator()
+            }
+        }
+        uiState.savedSettings == null || showSettings -> {
+            SettingsScreen(
+                uiState = uiState,
+                canNavigateBack = uiState.savedSettings != null,
+                onBack = { showSettings = false },
+                onPatternSelected = settingsViewModel::selectPattern,
+                onShiftAdded = settingsViewModel::addShift,
+                onRemoveLast = settingsViewModel::removeLastShift,
+                onClear = settingsViewModel::clearCustomShifts,
+                onReferenceDateSelected = settingsViewModel::setReferenceDate,
+                onSave = settingsViewModel::save,
+                modifier = modifier,
+            )
+        }
+        else -> {
+            val settings = requireNotNull(uiState.savedSettings)
+            val calendarMonth = remember(settings, visibleMonth) {
+                MonthlyCalendarGenerator.generate(
+                    yearMonth = visibleMonth,
+                    shiftCalculator = ShiftCalculator(
+                        referenceDate = settings.referenceDate,
+                        shifts = settings.shifts,
+                    ),
+                )
+            }
+            CalendarScreen(
+                calendarMonth = calendarMonth,
+                today = calendarViewModel.today,
+                onPreviousMonth = calendarViewModel::showPreviousMonth,
+                onNextMonth = calendarViewModel::showNextMonth,
+                onToday = calendarViewModel::showToday,
+                onOpenSettings = { showSettings = true },
+                modifier = modifier,
+            )
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SettingsScreen(
     uiState: SettingsUiState,
+    canNavigateBack: Boolean,
+    onBack: () -> Unit,
     onPatternSelected: (ShiftPatternType) -> Unit,
     onShiftAdded: (ShiftType) -> Unit,
     onRemoveLast: () -> Unit,
@@ -95,7 +147,16 @@ private fun SettingsScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            TopAppBar(title = { Text(stringResource(R.string.settings_title)) })
+            TopAppBar(
+                title = { Text(stringResource(R.string.settings_title)) },
+                actions = {
+                    if (canNavigateBack) {
+                        TextButton(onClick = onBack) {
+                            Text(stringResource(R.string.settings_back_to_calendar))
+                        }
+                    }
+                },
+            )
         },
     ) { contentPadding ->
         if (uiState.isLoading) {
@@ -439,6 +500,8 @@ private fun SettingsScreenPreview() {
                 patternType = ShiftPatternType.SIX_BY_SIX,
                 referenceDate = LocalDate.of(2026, 9, 18),
             ),
+            canNavigateBack = true,
+            onBack = {},
             onPatternSelected = {},
             onShiftAdded = {},
             onRemoveLast = {},

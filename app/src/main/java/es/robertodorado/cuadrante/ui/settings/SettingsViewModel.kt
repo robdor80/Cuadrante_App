@@ -18,6 +18,7 @@ import kotlinx.coroutines.launch
 
 data class SettingsUiState(
     val isLoading: Boolean = true,
+    val savedSettings: AppSettings? = null,
     val patternType: ShiftPatternType = ShiftPatternType.SIX_BY_SIX,
     val customShifts: List<ShiftType> = emptyList(),
     val referenceDate: LocalDate = LocalDate.now(),
@@ -58,6 +59,7 @@ class SettingsViewModel(
                 } else {
                     currentState.copy(
                         isLoading = false,
+                        savedSettings = savedSettings,
                         patternType = savedSettings.patternType,
                         customShifts = if (savedSettings.patternType == ShiftPatternType.CUSTOM) {
                             savedSettings.shifts
@@ -111,6 +113,7 @@ class SettingsViewModel(
             mutableUiState.update {
                 it.copy(
                     isSaving = false,
+                    savedSettings = if (result.isSuccess) settings else it.savedSettings,
                     saveResult = if (result.isSuccess) SaveResult.SUCCESS else SaveResult.ERROR,
                 )
             }

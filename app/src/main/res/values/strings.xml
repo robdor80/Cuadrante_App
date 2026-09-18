@@ -34,4 +34,20 @@
     <string name="settings_save">Guardar configuración</string>
     <string name="settings_saved">Configuración guardada</string>
     <string name="settings_save_error">No se pudo guardar la configuración</string>
+    <string name="settings_back_to_calendar">Calendario</string>
+
+    <string name="calendar_settings">Ajustes</string>
+    <string name="calendar_previous_symbol">‹</string>
+    <string name="calendar_next_symbol">›</string>
+    <string name="calendar_previous_month">Mes anterior</string>
+    <string name="calendar_next_month">Mes siguiente</string>
+    <string name="calendar_go_to_today">Ir a hoy</string>
+    <string name="calendar_day_description">%1$s, turno %2$s</string>
+    <string name="weekday_monday_short">L</string>
+    <string name="weekday_tuesday_short">M</string>
+    <string name="weekday_wednesday_short">X</string>
+    <string name="weekday_thursday_short">J</string>
+    <string name="weekday_friday_short">V</string>
+    <string name="weekday_saturday_short">S</string>
+    <string name="weekday_sunday_short">D</string>
 </resources>
