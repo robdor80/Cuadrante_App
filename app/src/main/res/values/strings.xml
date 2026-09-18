@@ -16,8 +16,7 @@
     <string name="shift_abbreviation_post_night">S</string>
     <string name="shift_abbreviation_off">L</string>
 
-    <string name="settings_title">Configurar turnos</string>
-    <string name="settings_intro">Elige tu cadencia y la fecha desde la que comienza. Podrás modificar esta configuración cuando lo necesites.</string>
+    <string name="settings_title">Ajustes</string>
     <string name="settings_pattern_heading">Cadencia de turnos</string>
     <string name="pattern_six_by_six">Cadencia 6x6</string>
     <string name="pattern_custom">Personalizada</string>
@@ -28,7 +27,7 @@
     <string name="custom_pattern_remove_last">Borrar último</string>
     <string name="custom_pattern_clear">Limpiar</string>
     <string name="reference_date_heading">Fecha de referencia</string>
-    <string name="reference_date_explanation">Esta fecha corresponde al primer turno del ciclo.</string>
+    <string name="reference_date_explanation">Corresponde al primer turno del ciclo</string>
     <string name="date_picker_accept">Aceptar</string>
     <string name="date_picker_cancel">Cancelar</string>
     <string name="settings_save">Guardar configuración</string>
@@ -36,6 +35,31 @@
     <string name="settings_save_error">No se pudo guardar la configuración</string>
     <string name="settings_back_symbol">‹</string>
     <string name="settings_back_description">Volver al calendario</string>
+    <string name="incidents_settings_title">Ausencias y permisos</string>
+    <string name="incidents_add">Añadir</string>
+    <string name="incidents_empty">No hay ausencias ni permisos registrados</string>
+    <string name="incidents_loading">Cargando incidencias</string>
+    <string name="incidents_error">No se pudieron guardar los cambios</string>
+    <string name="incident_type_ap">AP</string>
+    <string name="incident_type_permission">Permiso</string>
+    <string name="incident_type_vacation">Vacaciones</string>
+    <string name="incident_delete">Eliminar %1$s</string>
+    <string name="incident_add_title">Añadir ausencia o permiso</string>
+    <string name="incident_select_type">Tipo</string>
+    <string name="incident_previous_month">Mes anterior</string>
+    <string name="incident_next_month">Mes siguiente</string>
+    <plurals name="incident_selected_days">
+        <item quantity="one">%1$d día seleccionado</item>
+        <item quantity="other">%1$d días seleccionados</item>
+    </plurals>
+    <string name="incident_work_days_hint">Selecciona uno o varios días de trabajo. Los días libres no se pueden seleccionar.</string>
+    <string name="incident_cancel">Cancelar</string>
+    <string name="incident_save">Guardar</string>
+    <string name="incident_date_description">%1$s, turno %2$s</string>
+    <string name="incident_vacation_hint">Selecciona el primer y último día del periodo.</string>
+    <string name="incident_vacation_from">Desde</string>
+    <string name="incident_vacation_until">Hasta</string>
+    <string name="incident_select_date">Seleccionar fecha</string>
 
     <string name="calendar_settings">Ajustes</string>
     <string name="calendar_previous_symbol">‹</string>

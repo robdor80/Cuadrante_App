@@ -6,15 +6,21 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.viewmodel.compose.viewModel
 import es.robertodorado.cuadrante.data.local.AppSettingsRepository
+import es.robertodorado.cuadrante.data.local.IncidentsRepository
 import es.robertodorado.cuadrante.data.local.appSettingsDataStore
+import es.robertodorado.cuadrante.data.local.incidentsDataStore
 import es.robertodorado.cuadrante.ui.CuadranteApp
 import es.robertodorado.cuadrante.ui.calendar.CalendarViewModel
+import es.robertodorado.cuadrante.ui.incidents.IncidentsViewModel
 import es.robertodorado.cuadrante.ui.settings.SettingsViewModel
 import es.robertodorado.cuadrante.ui.theme.CuadranteTheme
 
 class MainActivity : ComponentActivity() {
     private val settingsRepository by lazy {
         AppSettingsRepository(applicationContext.appSettingsDataStore)
+    }
+    private val incidentsRepository by lazy {
+        IncidentsRepository(applicationContext.incidentsDataStore)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,9 +32,13 @@ class MainActivity : ComponentActivity() {
                     factory = SettingsViewModel.factory(settingsRepository),
                 )
                 val calendarViewModel: CalendarViewModel = viewModel()
+                val incidentsViewModel: IncidentsViewModel = viewModel(
+                    factory = IncidentsViewModel.factory(incidentsRepository),
+                )
                 CuadranteApp(
                     settingsViewModel = settingsViewModel,
                     calendarViewModel = calendarViewModel,
+                    incidentsViewModel = incidentsViewModel,
                 )
             }
         }

@@ -21,6 +21,7 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -51,9 +52,13 @@ import es.robertodorado.cuadrante.R
 import es.robertodorado.cuadrante.calculation.ShiftCalculator
 import es.robertodorado.cuadrante.model.ShiftPatternType
 import es.robertodorado.cuadrante.model.ShiftType
+import es.robertodorado.cuadrante.model.IncidentType
 import es.robertodorado.cuadrante.ui.calendar.CalendarScreen
 import es.robertodorado.cuadrante.ui.calendar.CalendarViewModel
 import es.robertodorado.cuadrante.ui.calendar.MonthlyCalendarGenerator
+import es.robertodorado.cuadrante.ui.incidents.IncidentsSettingsCard
+import es.robertodorado.cuadrante.ui.incidents.IncidentsUiState
+import es.robertodorado.cuadrante.ui.incidents.IncidentsViewModel
 import es.robertodorado.cuadrante.ui.settings.SaveResult
 import es.robertodorado.cuadrante.ui.settings.SettingsUiState
 import es.robertodorado.cuadrante.ui.settings.SettingsViewModel
@@ -70,9 +75,11 @@ import java.util.Locale
 fun CuadranteApp(
     settingsViewModel: SettingsViewModel,
     calendarViewModel: CalendarViewModel,
+    incidentsViewModel: IncidentsViewModel,
     modifier: Modifier = Modifier,
 ) {
     val uiState by settingsViewModel.uiState.collectAsState()
+    val incidentsUiState by incidentsViewModel.uiState.collectAsState()
     val visibleMonth by calendarViewModel.visibleMonth.collectAsState()
     var showSettings by rememberSaveable { mutableStateOf(false) }
 
@@ -102,6 +109,10 @@ fun CuadranteApp(
                 onClear = settingsViewModel::clearCustomShifts,
                 onReferenceDateSelected = settingsViewModel::setReferenceDate,
                 onSave = settingsViewModel::save,
+                incidentsUiState = incidentsUiState,
+                onAddIncidentDates = incidentsViewModel::addDates,
+                onAddVacation = incidentsViewModel::addVacation,
+                onDeleteIncident = incidentsViewModel::delete,
                 modifier = modifier,
             )
         }
@@ -141,6 +152,10 @@ private fun SettingsScreen(
     onClear: () -> Unit,
     onReferenceDateSelected: (LocalDate) -> Unit,
     onSave: () -> Unit,
+    incidentsUiState: IncidentsUiState,
+    onAddIncidentDates: (IncidentType, Set<LocalDate>) -> Unit,
+    onAddVacation: (LocalDate, LocalDate) -> Unit,
+    onDeleteIncident: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
@@ -191,58 +206,27 @@ private fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 item {
-                    Text(
-                        text = stringResource(R.string.settings_intro),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 4.dp),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                }
-                item {
-                    PatternCard(
+                    ShiftSettingsCard(
                         uiState = uiState,
                         onPatternSelected = onPatternSelected,
                         onShiftAdded = onShiftAdded,
                         onRemoveLast = onRemoveLast,
                         onClear = onClear,
-                    )
-                }
-                item {
-                    ReferenceDateCard(
-                        date = uiState.referenceDate,
                         onChooseDate = { showDatePicker = true },
+                        onSave = onSave,
                     )
                 }
                 item {
-                    Button(
-                        onClick = onSave,
-                        enabled = uiState.canSave,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
-                    ) {
-                        if (uiState.isSaving) {
-                            CircularProgressIndicator(
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                modifier = Modifier.size(22.dp),
-                                strokeWidth = 2.dp,
-                            )
-                        } else {
-                            Text(stringResource(R.string.settings_save))
-                        }
+                    val shiftCalculator = uiState.selectedShifts.takeIf { it.isNotEmpty() }?.let { shifts ->
+                        ShiftCalculator(uiState.referenceDate, shifts)
                     }
-
-                    when (uiState.saveResult) {
-                        SaveResult.SUCCESS -> StatusText(
-                            text = stringResource(R.string.settings_saved),
-                            isError = false,
-                        )
-                        SaveResult.ERROR -> StatusText(
-                            text = stringResource(R.string.settings_save_error),
-                            isError = true,
-                        )
-                        null -> Unit
-                    }
+                    IncidentsSettingsCard(
+                        uiState = incidentsUiState,
+                        shiftCalculator = shiftCalculator,
+                        onAddDates = onAddIncidentDates,
+                        onAddVacation = onAddVacation,
+                        onDelete = onDeleteIncident,
+                    )
                 }
             }
         }
@@ -261,12 +245,14 @@ private fun SettingsScreen(
 }
 
 @Composable
-private fun PatternCard(
+private fun ShiftSettingsCard(
     uiState: SettingsUiState,
     onPatternSelected: (ShiftPatternType) -> Unit,
     onShiftAdded: (ShiftType) -> Unit,
     onRemoveLast: () -> Unit,
     onClear: () -> Unit,
+    onChooseDate: () -> Unit,
+    onSave: () -> Unit,
 ) {
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
@@ -349,6 +335,40 @@ private fun PatternCard(
                         Text(stringResource(R.string.custom_pattern_clear))
                     }
                 }
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 2.dp))
+            ReferenceDateSection(
+                date = uiState.referenceDate,
+                onChooseDate = onChooseDate,
+            )
+            Button(
+                onClick = onSave,
+                enabled = uiState.canSave,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+            ) {
+                if (uiState.isSaving) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(22.dp),
+                        strokeWidth = 2.dp,
+                    )
+                } else {
+                    Text(stringResource(R.string.settings_save))
+                }
+            }
+            when (uiState.saveResult) {
+                SaveResult.SUCCESS -> StatusText(
+                    text = stringResource(R.string.settings_saved),
+                    isError = false,
+                )
+                SaveResult.ERROR -> StatusText(
+                    text = stringResource(R.string.settings_save_error),
+                    isError = true,
+                )
+                null -> Unit
             }
         }
     }
@@ -446,7 +466,7 @@ private fun ShiftToken(
 }
 
 @Composable
-private fun ReferenceDateCard(
+private fun ReferenceDateSection(
     date: LocalDate,
     onChooseDate: () -> Unit,
 ) {
@@ -454,35 +474,33 @@ private fun ReferenceDateCard(
     val formattedDate = remember(date, locale) {
         date.format(
             DateTimeFormatter
-                .ofLocalizedDate(FormatStyle.LONG)
+                .ofLocalizedDate(FormatStyle.MEDIUM)
                 .withLocale(locale),
         )
     }
 
-    ElevatedCard(
+    Row(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.large,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(
-            modifier = Modifier.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             Text(
                 text = stringResource(R.string.reference_date_heading),
                 fontWeight = FontWeight.SemiBold,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.labelLarge,
             )
             Text(
                 text = stringResource(R.string.reference_date_explanation),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodySmall,
             )
-            OutlinedButton(
-                onClick = onChooseDate,
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Text(formattedDate)
-            }
+        }
+        OutlinedButton(onClick = onChooseDate) {
+            Text(formattedDate)
         }
     }
 }
@@ -557,6 +575,10 @@ private fun SettingsScreenPreview() {
             onClear = {},
             onReferenceDateSelected = {},
             onSave = {},
+            incidentsUiState = IncidentsUiState(isLoading = false),
+            onAddIncidentDates = { _, _ -> },
+            onAddVacation = { _, _ -> },
+            onDeleteIncident = {},
         )
     }
 }
