@@ -3,11 +3,11 @@ package es.robertodorado.cuadrante.ui.calendar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,7 +24,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -66,7 +65,19 @@ fun CalendarScreen(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.app_name)) },
+                title = {
+                    Column {
+                        Text(
+                            text = stringResource(R.string.app_name),
+                            style = MaterialTheme.typography.titleLarge,
+                        )
+                        Text(
+                            text = stringResource(R.string.app_subtitle),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    }
+                },
                 actions = {
                     TextButton(onClick = onOpenSettings) {
                         Text(stringResource(R.string.calendar_settings))
@@ -79,63 +90,72 @@ fun CalendarScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(contentPadding)
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                shape = MaterialTheme.shapes.large,
+                tonalElevation = 1.dp,
             ) {
-                MonthNavigationButton(
-                    symbol = stringResource(R.string.calendar_previous_symbol),
-                    description = stringResource(R.string.calendar_previous_month),
-                    onClick = onPreviousMonth,
-                )
-                Text(
-                    text = monthTitle,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.weight(1f),
-                    style = MaterialTheme.typography.titleLarge,
-                    textAlign = TextAlign.Center,
-                )
-                MonthNavigationButton(
-                    symbol = stringResource(R.string.calendar_next_symbol),
-                    description = stringResource(R.string.calendar_next_month),
-                    onClick = onNextMonth,
-                )
-            }
-
-            Row(modifier = Modifier.fillMaxWidth()) {
-                Spacer(modifier = Modifier.weight(1f))
-                TextButton(onClick = onToday) {
-                    Text(stringResource(R.string.calendar_go_to_today))
-                }
-            }
-
-            WeekdayHeader()
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-            ) {
-                calendarMonth.weeks.forEach { week ->
+                Column(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        week.forEach { day ->
-                            CalendarDayCell(
-                                day = day,
-                                isToday = day.date == today,
-                                locale = locale,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight(),
-                            )
+                        MonthNavigationButton(
+                            symbol = stringResource(R.string.calendar_previous_symbol),
+                            description = stringResource(R.string.calendar_previous_month),
+                            onClick = onPreviousMonth,
+                        )
+                        Text(
+                            text = monthTitle,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.titleLarge,
+                            textAlign = TextAlign.Center,
+                        )
+                        MonthNavigationButton(
+                            symbol = stringResource(R.string.calendar_next_symbol),
+                            description = stringResource(R.string.calendar_next_month),
+                            onClick = onNextMonth,
+                        )
+                    }
+
+                    TextButton(
+                        onClick = onToday,
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                    ) {
+                        Text(stringResource(R.string.calendar_go_to_today))
+                    }
+
+                    WeekdayHeader()
+
+                    calendarMonth.weeks.forEach { week ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        ) {
+                            week.forEach { day ->
+                                if (day == null) {
+                                    Spacer(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .aspectRatio(CALENDAR_CELL_ASPECT_RATIO),
+                                    )
+                                } else {
+                                    CalendarDayCell(
+                                        day = day,
+                                        isToday = day.date == today,
+                                        locale = locale,
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .aspectRatio(CALENDAR_CELL_ASPECT_RATIO),
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -214,18 +234,13 @@ private fun CalendarDayCell(
         shiftLabel,
     )
     val shape = MaterialTheme.shapes.small
-    val borderColor = if (isToday) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.outlineVariant
-    }
+    val borderColor = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
     val borderWidth = if (isToday) 2.dp else 1.dp
 
     Surface(
         color = MaterialTheme.colorScheme.surfaceVariant,
         shape = shape,
         modifier = modifier
-            .alpha(if (day.isInDisplayedMonth) 1f else 0.45f)
             .border(borderWidth, borderColor, shape)
             .semantics { contentDescription = dayDescription },
     ) {
@@ -259,3 +274,5 @@ private fun CalendarDayCell(
         }
     }
 }
+
+private const val CALENDAR_CELL_ASPECT_RATIO = 0.82f

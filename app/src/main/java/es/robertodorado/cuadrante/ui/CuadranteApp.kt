@@ -1,6 +1,7 @@
 package es.robertodorado.cuadrante.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,9 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -39,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -143,16 +144,25 @@ private fun SettingsScreen(
     modifier: Modifier = Modifier,
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
+    val backDescription = stringResource(R.string.settings_back_description)
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.settings_title)) },
-                actions = {
+                navigationIcon = {
                     if (canNavigateBack) {
-                        TextButton(onClick = onBack) {
-                            Text(stringResource(R.string.settings_back_to_calendar))
+                        TextButton(
+                            onClick = onBack,
+                            modifier = Modifier.semantics {
+                                contentDescription = backDescription
+                            },
+                        ) {
+                            Text(
+                                text = stringResource(R.string.settings_back_symbol),
+                                style = MaterialTheme.typography.headlineSmall,
+                            )
                         }
                     }
                 },
@@ -173,14 +183,19 @@ private fun SettingsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(contentPadding)
-                    .padding(horizontal = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                    .padding(horizontal = 16.dp),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    top = 8.dp,
+                    bottom = 24.dp,
+                ),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 item {
                     Text(
                         text = stringResource(R.string.settings_intro),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                        style = MaterialTheme.typography.bodyMedium,
                     )
                 }
                 item {
@@ -228,7 +243,6 @@ private fun SettingsScreen(
                         )
                         null -> Unit
                     }
-                    Spacer(modifier = Modifier.height(20.dp))
                 }
             }
         }
@@ -254,10 +268,13 @@ private fun PatternCard(
     onRemoveLast: () -> Unit,
     onClear: () -> Unit,
 ) {
-    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+    ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            modifier = Modifier.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
                 text = stringResource(R.string.settings_pattern_heading),
@@ -289,11 +306,15 @@ private fun PatternCard(
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     ShiftType.entries.forEach { shift ->
-                        ShiftAddButton(shift = shift, onClick = { onShiftAdded(shift) })
+                        ShiftAddButton(
+                            shift = shift,
+                            onClick = { onShiftAdded(shift) },
+                            modifier = Modifier.weight(1f),
+                        )
                     }
                 }
             }
@@ -337,6 +358,7 @@ private fun PatternCard(
 private fun ShiftAddButton(
     shift: ShiftType,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val colors = shift.visualColors()
     val label = stringResource(shift.labelResource())
@@ -348,9 +370,10 @@ private fun ShiftAddButton(
             containerColor = colors.background,
             contentColor = colors.foreground,
         ),
-        contentPadding = ButtonDefaults.TextButtonContentPadding,
-        modifier = Modifier
-            .size(52.dp)
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+        modifier = modifier
+            .aspectRatio(1f)
+            .sizeIn(minWidth = 44.dp, minHeight = 44.dp)
             .semantics { contentDescription = addDescription },
     ) {
         Text(
@@ -372,16 +395,36 @@ private fun ShiftSequence(
             style = MaterialTheme.typography.bodyMedium,
         )
     } else {
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(shifts) { shift ->
-                ShiftToken(shift)
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            shifts.chunked(SHIFTS_PER_ROW).forEach { rowShifts ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    rowShifts.forEach { shift ->
+                        ShiftToken(
+                            shift = shift,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    repeat(SHIFTS_PER_ROW - rowShifts.size) {
+                        Spacer(
+                            modifier = Modifier
+                                .weight(1f)
+                                .aspectRatio(1f),
+                        )
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun ShiftToken(shift: ShiftType) {
+private fun ShiftToken(
+    shift: ShiftType,
+    modifier: Modifier = Modifier,
+) {
     val colors = shift.visualColors()
     val label = stringResource(shift.labelResource())
 
@@ -389,8 +432,8 @@ private fun ShiftToken(shift: ShiftType) {
         color = colors.background,
         contentColor = colors.foreground,
         shape = MaterialTheme.shapes.medium,
-        modifier = Modifier
-            .size(44.dp)
+        modifier = modifier
+            .aspectRatio(1f)
             .semantics { contentDescription = label },
     ) {
         Box(contentAlignment = Alignment.Center) {
@@ -407,18 +450,22 @@ private fun ReferenceDateCard(
     date: LocalDate,
     onChooseDate: () -> Unit,
 ) {
-    val formattedDate = remember(date) {
+    val locale = Locale.forLanguageTag(LocalLocale.current.toLanguageTag())
+    val formattedDate = remember(date, locale) {
         date.format(
             DateTimeFormatter
                 .ofLocalizedDate(FormatStyle.LONG)
-                .withLocale(Locale.getDefault()),
+                .withLocale(locale),
         )
     }
 
-    ElevatedCard(modifier = Modifier.fillMaxWidth()) {
+    ElevatedCard(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.large,
+    ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
                 text = stringResource(R.string.reference_date_heading),
@@ -439,6 +486,8 @@ private fun ReferenceDateCard(
         }
     }
 }
+
+private const val SHIFTS_PER_ROW = 6
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

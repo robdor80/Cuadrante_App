@@ -7,7 +7,7 @@ import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -16,75 +16,88 @@ class MonthlyCalendarGeneratorTest {
     private val calculator = ShiftCalculator(referenceDate, DefaultShiftPatterns.SIX_BY_SIX)
 
     @Test
-    fun `month beginning on Monday starts grid on its first day`() {
+    fun `month beginning on Monday starts in the first cell`() {
         val calendar = generate(2026, 6)
 
-        assertEquals(DayOfWeek.MONDAY, calendar.days.first().date.dayOfWeek)
-        assertEquals(LocalDate.of(2026, 6, 1), calendar.days.first().date)
-        assertTrue(calendar.days.first().isInDisplayedMonth)
+        assertEquals(LocalDate.of(2026, 6, 1), calendar.weeks.first().first()?.date)
+        assertEquals(DayOfWeek.MONDAY, calendar.weeks.first().first()?.date?.dayOfWeek)
     }
 
     @Test
-    fun `month beginning on Sunday includes six previous real dates`() {
+    fun `month beginning on Sunday has six empty leading cells`() {
         val calendar = generate(2026, 2)
 
-        assertEquals(LocalDate.of(2026, 1, 26), calendar.days.first().date)
-        assertEquals(LocalDate.of(2026, 2, 1), calendar.days[6].date)
-        assertFalse(calendar.days.first().isInDisplayedMonth)
-        assertTrue(calendar.days[6].isInDisplayedMonth)
+        assertTrue(calendar.weeks.first().take(6).all { it == null })
+        assertEquals(LocalDate.of(2026, 2, 1), calendar.weeks.first()[6]?.date)
     }
 
     @Test
-    fun `normal February contains exactly 28 current month dates`() {
+    fun `normal February contains 28 dates and no adjacent dates`() {
         val calendar = generate(2026, 2)
 
-        assertEquals(28, calendar.days.count(CalendarDay::isInDisplayedMonth))
-        assertTrue(calendar.days.any { it.date == LocalDate.of(2026, 2, 28) })
+        assertEquals(28, calendar.days.size)
+        assertEquals(LocalDate.of(2026, 2, 1), calendar.days.first().date)
+        assertEquals(LocalDate.of(2026, 2, 28), calendar.days.last().date)
+        assertOnlyCurrentMonthDates(calendar)
     }
 
     @Test
-    fun `leap February contains February 29`() {
+    fun `leap February contains 29 dates`() {
         val calendar = generate(2028, 2)
 
-        assertEquals(29, calendar.days.count(CalendarDay::isInDisplayedMonth))
-        assertTrue(calendar.days.any { it.date == LocalDate.of(2028, 2, 29) })
+        assertEquals(29, calendar.days.size)
+        assertEquals(LocalDate.of(2028, 2, 29), calendar.days.last().date)
+        assertOnlyCurrentMonthDates(calendar)
     }
 
     @Test
-    fun `December and January remain consecutive across year boundary`() {
-        val december = YearMonth.of(2026, 12)
-        val january = december.plusMonths(1)
+    fun `thirty day month contains only its dates`() {
+        val calendar = generate(2026, 9)
 
-        assertEquals(YearMonth.of(2027, 1), january)
-        assertTrue(generate(2026, 12).days.any { it.date == LocalDate.of(2027, 1, 1) })
-        assertTrue(generate(2027, 1).days.any { it.date == LocalDate.of(2026, 12, 31) })
+        assertEquals(30, calendar.days.size)
+        assertOnlyCurrentMonthDates(calendar)
     }
 
     @Test
-    fun `calendar always contains six complete Monday to Sunday weeks`() {
-        listOf(
-            YearMonth.of(2026, 2),
-            YearMonth.of(2026, 6),
-            YearMonth.of(2026, 9),
-            YearMonth.of(2028, 2),
-        ).forEach { month ->
-            val calendar = MonthlyCalendarGenerator.generate(month, calculator)
+    fun `thirty one day month contains only its dates`() {
+        val calendar = generate(2026, 7)
 
-            assertEquals(42, calendar.days.size)
-            assertEquals(6, calendar.weeks.size)
-            calendar.weeks.forEach { week ->
-                assertEquals(7, week.size)
-                assertEquals(DayOfWeek.MONDAY, week.first().date.dayOfWeek)
-                assertEquals(DayOfWeek.SUNDAY, week.last().date.dayOfWeek)
-                week.zipWithNext().forEach { (current, next) ->
-                    assertEquals(current.date.plusDays(1), next.date)
-                }
-            }
-        }
+        assertEquals(31, calendar.days.size)
+        assertOnlyCurrentMonthDates(calendar)
     }
 
     @Test
-    fun `every visible date receives its shift from ShiftCalculator`() {
+    fun `calendar uses five weeks when five are sufficient`() {
+        assertEquals(5, generate(2026, 9).weeks.size)
+    }
+
+    @Test
+    fun `calendar uses six weeks when required`() {
+        val calendar = generate(2026, 3)
+
+        assertEquals(6, calendar.weeks.size)
+        assertTrue(calendar.weeks.last().drop(2).all { it == null })
+    }
+
+    @Test
+    fun `calendar can use four weeks for a complete four week February`() {
+        assertEquals(4, generate(2027, 2).weeks.size)
+    }
+
+    @Test
+    fun `December and January do not include dates from the adjacent year`() {
+        val december = generate(2026, 12)
+        val january = generate(2027, 1)
+
+        assertOnlyCurrentMonthDates(december)
+        assertOnlyCurrentMonthDates(january)
+        assertNull(december.weeks.first().first())
+        assertTrue(january.weeks.first().take(4).all { it == null })
+        assertEquals(LocalDate.of(2027, 1, 1), january.weeks.first()[4]?.date)
+    }
+
+    @Test
+    fun `every current month date receives its shift from ShiftCalculator`() {
         val calendar = generate(2026, 9)
 
         calendar.days.forEach { day ->
@@ -94,10 +107,12 @@ class MonthlyCalendarGeneratorTest {
             ShiftType.MORNING,
             calendar.days.single { it.date == referenceDate }.shift,
         )
-        assertEquals(
-            ShiftType.OFF,
-            calendar.days.single { it.date == referenceDate.minusDays(1) }.shift,
-        )
+    }
+
+    private fun assertOnlyCurrentMonthDates(calendar: CalendarMonth) {
+        assertTrue(calendar.days.all { YearMonth.from(it.date) == calendar.yearMonth })
+        assertEquals(calendar.days, calendar.weeks.flatten().filterNotNull())
+        calendar.weeks.forEach { assertEquals(7, it.size) }
     }
 
     private fun generate(year: Int, month: Int): CalendarMonth =

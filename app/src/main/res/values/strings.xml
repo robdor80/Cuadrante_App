@@ -34,7 +34,8 @@
     <string name="settings_save">Guardar configuración</string>
     <string name="settings_saved">Configuración guardada</string>
     <string name="settings_save_error">No se pudo guardar la configuración</string>
-    <string name="settings_back_to_calendar">Calendario</string>
+    <string name="settings_back_symbol">‹</string>
+    <string name="settings_back_description">Volver al calendario</string>
 
     <string name="calendar_settings">Ajustes</string>
     <string name="calendar_previous_symbol">‹</string>

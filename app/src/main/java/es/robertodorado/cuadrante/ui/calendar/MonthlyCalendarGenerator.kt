@@ -2,13 +2,11 @@ package es.robertodorado.cuadrante.ui.calendar
 
 import es.robertodorado.cuadrante.calculation.ShiftCalculator
 import es.robertodorado.cuadrante.model.ShiftType
-import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.YearMonth
 
 data class CalendarDay(
     val date: LocalDate,
-    val isInDisplayedMonth: Boolean,
     val shift: ShiftType,
 )
 
@@ -16,32 +14,36 @@ data class CalendarMonth(
     val yearMonth: YearMonth,
     val days: List<CalendarDay>,
 ) {
-    val weeks: List<List<CalendarDay>>
-        get() = days.chunked(DAYS_PER_WEEK)
+    val weeks: List<List<CalendarDay?>>
+        get() {
+            val leadingEmptyCells = yearMonth.atDay(1).dayOfWeek.value - 1
+            val requiredCells = leadingEmptyCells + days.size
+            val weekCount = (requiredCells + DAYS_PER_WEEK - 1) / DAYS_PER_WEEK
+
+            return List(weekCount) { weekIndex ->
+                List(DAYS_PER_WEEK) { dayOfWeekIndex ->
+                    val cellIndex = weekIndex * DAYS_PER_WEEK + dayOfWeekIndex
+                    val dayIndex = cellIndex - leadingEmptyCells
+                    days.getOrNull(dayIndex)
+                }
+            }
+        }
 
     private companion object {
         const val DAYS_PER_WEEK = 7
     }
 }
 
-/** Builds a stable six-week calendar starting on Monday using real dates only. */
+/** Builds only the dates in [yearMonth]; visual padding is represented by null cells. */
 object MonthlyCalendarGenerator {
-    private const val DAYS_PER_WEEK = 7
-    private const val WEEKS_PER_GRID = 6
-    private const val DAYS_PER_GRID = DAYS_PER_WEEK * WEEKS_PER_GRID
-
     fun generate(
         yearMonth: YearMonth,
         shiftCalculator: ShiftCalculator,
     ): CalendarMonth {
-        val firstOfMonth = yearMonth.atDay(1)
-        val daysAfterMonday = firstOfMonth.dayOfWeek.value - DayOfWeek.MONDAY.value
-        val gridStart = firstOfMonth.minusDays(daysAfterMonday.toLong())
-        val days = List(DAYS_PER_GRID) { offset ->
-            val date = gridStart.plusDays(offset.toLong())
+        val days = (1..yearMonth.lengthOfMonth()).map { dayOfMonth ->
+            val date = yearMonth.atDay(dayOfMonth)
             CalendarDay(
                 date = date,
-                isInDisplayedMonth = YearMonth.from(date) == yearMonth,
                 shift = shiftCalculator.shiftFor(date),
             )
         }
