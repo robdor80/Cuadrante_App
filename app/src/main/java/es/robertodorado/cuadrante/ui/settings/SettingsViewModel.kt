@@ -97,6 +97,10 @@ class SettingsViewModel(
         mutableUiState.update { it.copy(referenceDate = date, saveResult = null) }
     }
 
+    fun consumeSaveResult() {
+        mutableUiState.update { it.copy(saveResult = null) }
+    }
+
     fun save() {
         val currentState = mutableUiState.value
         if (!currentState.canSave) return

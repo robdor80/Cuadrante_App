@@ -16,7 +16,6 @@
     <string name="shift_abbreviation_post_night">S</string>
     <string name="shift_abbreviation_off">L</string>
 
-    <string name="settings_title">Ajustes</string>
     <string name="settings_pattern_heading">Cadencia de turnos</string>
     <string name="pattern_six_by_six">Cadencia 6x6</string>
     <string name="pattern_custom">Personalizada</string>
@@ -33,7 +32,6 @@
     <string name="settings_save">Guardar configuración</string>
     <string name="settings_saved">Configuración guardada</string>
     <string name="settings_save_error">No se pudo guardar la configuración</string>
-    <string name="settings_back_symbol">‹</string>
     <string name="settings_back_description">Volver al calendario</string>
     <string name="incidents_settings_title">Ausencias y permisos</string>
     <string name="incidents_add">Añadir</string>

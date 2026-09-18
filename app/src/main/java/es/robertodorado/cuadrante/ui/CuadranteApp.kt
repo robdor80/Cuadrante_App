@@ -12,7 +12,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -22,13 +25,17 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,7 +52,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import es.robertodorado.cuadrante.R
@@ -56,6 +62,7 @@ import es.robertodorado.cuadrante.model.IncidentType
 import es.robertodorado.cuadrante.ui.calendar.CalendarScreen
 import es.robertodorado.cuadrante.ui.calendar.CalendarViewModel
 import es.robertodorado.cuadrante.ui.calendar.MonthlyCalendarGenerator
+import es.robertodorado.cuadrante.ui.calendar.incidentsForMonth
 import es.robertodorado.cuadrante.ui.incidents.IncidentsSettingsCard
 import es.robertodorado.cuadrante.ui.incidents.IncidentsUiState
 import es.robertodorado.cuadrante.ui.incidents.IncidentsViewModel
@@ -70,6 +77,8 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 import java.util.Locale
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun CuadranteApp(
@@ -82,12 +91,6 @@ fun CuadranteApp(
     val incidentsUiState by incidentsViewModel.uiState.collectAsState()
     val visibleMonth by calendarViewModel.visibleMonth.collectAsState()
     var showSettings by rememberSaveable { mutableStateOf(false) }
-
-    LaunchedEffect(uiState.saveResult, uiState.savedSettings) {
-        if (uiState.saveResult == SaveResult.SUCCESS && uiState.savedSettings != null) {
-            showSettings = false
-        }
-    }
 
     when {
         uiState.isLoading -> {
@@ -109,6 +112,7 @@ fun CuadranteApp(
                 onClear = settingsViewModel::clearCustomShifts,
                 onReferenceDateSelected = settingsViewModel::setReferenceDate,
                 onSave = settingsViewModel::save,
+                onSaveResultHandled = settingsViewModel::consumeSaveResult,
                 incidentsUiState = incidentsUiState,
                 onAddIncidentDates = incidentsViewModel::addDates,
                 onAddVacation = incidentsViewModel::addVacation,
@@ -127,8 +131,12 @@ fun CuadranteApp(
                     ),
                 )
             }
+            val monthlyIncidents = remember(incidentsUiState.incidents, visibleMonth) {
+                incidentsForMonth(incidentsUiState.incidents, visibleMonth)
+            }
             CalendarScreen(
                 calendarMonth = calendarMonth,
+                incidents = monthlyIncidents,
                 today = calendarViewModel.today,
                 onPreviousMonth = calendarViewModel::showPreviousMonth,
                 onNextMonth = calendarViewModel::showNextMonth,
@@ -152,6 +160,7 @@ private fun SettingsScreen(
     onClear: () -> Unit,
     onReferenceDateSelected: (LocalDate) -> Unit,
     onSave: () -> Unit,
+    onSaveResultHandled: () -> Unit,
     incidentsUiState: IncidentsUiState,
     onAddIncidentDates: (IncidentType, Set<LocalDate>) -> Unit,
     onAddVacation: (LocalDate, LocalDate) -> Unit,
@@ -160,28 +169,52 @@ private fun SettingsScreen(
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
     val backDescription = stringResource(R.string.settings_back_description)
+    val savedMessage = stringResource(R.string.settings_saved)
+    val saveErrorMessage = stringResource(R.string.settings_save_error)
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(uiState.saveResult) {
+        val result = uiState.saveResult ?: return@LaunchedEffect
+        val snackbarJob = launch {
+            snackbarHostState.showSnackbar(
+                message = if (result == SaveResult.SUCCESS) savedMessage else saveErrorMessage,
+                duration = SnackbarDuration.Indefinite,
+            )
+        }
+        delay(SAVE_CONFIRMATION_DURATION_MILLIS)
+        snackbarHostState.currentSnackbarData?.dismiss()
+        snackbarJob.join()
+        onSaveResultHandled()
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.settings_title)) },
-                navigationIcon = {
+            Surface(color = MaterialTheme.colorScheme.background) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .height(56.dp),
+                    contentAlignment = Alignment.CenterStart,
+                ) {
                     if (canNavigateBack) {
-                        TextButton(
+                        IconButton(
                             onClick = onBack,
                             modifier = Modifier.semantics {
                                 contentDescription = backDescription
                             },
                         ) {
-                            Text(
-                                text = stringResource(R.string.settings_back_symbol),
-                                style = MaterialTheme.typography.headlineSmall,
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
                             )
                         }
                     }
-                },
-            )
+                }
+            }
         },
     ) { contentPadding ->
         if (uiState.isLoading) {
@@ -359,17 +392,6 @@ private fun ShiftSettingsCard(
                     Text(stringResource(R.string.settings_save))
                 }
             }
-            when (uiState.saveResult) {
-                SaveResult.SUCCESS -> StatusText(
-                    text = stringResource(R.string.settings_saved),
-                    isError = false,
-                )
-                SaveResult.ERROR -> StatusText(
-                    text = stringResource(R.string.settings_save_error),
-                    isError = true,
-                )
-                null -> Unit
-            }
         }
     }
 }
@@ -541,22 +563,6 @@ private fun ReferenceDatePicker(
     }
 }
 
-@Composable
-private fun StatusText(
-    text: String,
-    isError: Boolean,
-) {
-    Text(
-        text = text,
-        color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 10.dp),
-        style = MaterialTheme.typography.bodyMedium,
-        textAlign = TextAlign.Center,
-    )
-}
-
 @Preview(showBackground = true)
 @Composable
 private fun SettingsScreenPreview() {
@@ -575,6 +581,7 @@ private fun SettingsScreenPreview() {
             onClear = {},
             onReferenceDateSelected = {},
             onSave = {},
+            onSaveResultHandled = {},
             incidentsUiState = IncidentsUiState(isLoading = false),
             onAddIncidentDates = { _, _ -> },
             onAddVacation = { _, _ -> },
@@ -582,3 +589,5 @@ private fun SettingsScreenPreview() {
         )
     }
 }
+
+private const val SAVE_CONFIRMATION_DURATION_MILLIS = 2_000L

@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -40,6 +41,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import es.robertodorado.cuadrante.R
+import es.robertodorado.cuadrante.model.DateIncident
+import es.robertodorado.cuadrante.model.IncidentType
+import es.robertodorado.cuadrante.model.VacationIncident
 import es.robertodorado.cuadrante.ui.abbreviationResource
 import es.robertodorado.cuadrante.ui.labelResource
 import es.robertodorado.cuadrante.ui.theme.TodayIndicator
@@ -50,14 +54,11 @@ import java.time.format.FormatStyle
 import java.time.format.TextStyle
 import java.util.Locale
 
-data class MonthlyIncidentItem(
-    val text: String,
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(
     calendarMonth: CalendarMonth,
+    incidents: List<MonthlyIncidentEntry>,
     today: LocalDate,
     onPreviousMonth: () -> Unit,
     onNextMonth: () -> Unit,
@@ -204,14 +205,18 @@ fun CalendarScreen(
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-            MonthlyIncidentsCard(incidents = emptyList())
+            MonthlyIncidentsCard(
+                incidents = incidents,
+                locale = locale,
+            )
         }
     }
 }
 
 @Composable
 private fun MonthlyIncidentsCard(
-    incidents: List<MonthlyIncidentItem>,
+    incidents: List<MonthlyIncidentEntry>,
+    locale: Locale,
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surface,
@@ -235,13 +240,60 @@ private fun MonthlyIncidentsCard(
                     style = MaterialTheme.typography.bodyMedium,
                 )
             } else {
-                incidents.forEach { incident ->
-                    Text(
-                        text = incident.text,
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
+                incidents.forEachIndexed { index, entry ->
+                    if (index > 0) {
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                    }
+                    MonthlyIncidentRow(entry = entry, locale = locale)
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun MonthlyIncidentRow(
+    entry: MonthlyIncidentEntry,
+    locale: Locale,
+) {
+    val typeLabel = stringResource(
+        when (entry.incident.type) {
+            IncidentType.AP -> R.string.incident_type_ap
+            IncidentType.PERMISSION -> R.string.incident_type_permission
+            IncidentType.VACATION -> R.string.incident_type_vacation
+        },
+    )
+    val dateText = remember(entry, locale) { formatMonthlyIncident(entry, locale) }
+
+    Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+        Text(
+            text = typeLabel,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.labelLarge,
+        )
+        Text(
+            text = dateText,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall,
+        )
+    }
+}
+
+private fun formatMonthlyIncident(
+    entry: MonthlyIncidentEntry,
+    locale: Locale,
+): String {
+    val shortFormatter = DateTimeFormatter.ofPattern("d MMM", locale)
+    return when (val incident = entry.incident) {
+        is DateIncident -> entry.datesInMonth.joinToString(", ") { it.format(shortFormatter) }
+        is VacationIncident -> {
+            val formatter = if (incident.startDate.year == incident.endDate.year) {
+                shortFormatter
+            } else {
+                DateTimeFormatter.ofPattern("d MMM yyyy", locale)
+            }
+            "${incident.startDate.format(formatter)} – ${incident.endDate.format(formatter)}"
         }
     }
 }
