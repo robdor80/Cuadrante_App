@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Cuadrante App</string>
+    <string name="app_subtitle">Calendario de turnos</string>
+    <string name="app_logo_content_description">Icono de Cuadrante App</string>
+
+    <string name="shift_morning">Mañana</string>
+    <string name="shift_afternoon">Tarde</string>
+    <string name="shift_night">Noche</string>
+    <string name="shift_post_night">Saliente</string>
+    <string name="shift_off">Libre</string>
+
+    <string name="shift_abbreviation_morning">M</string>
+    <string name="shift_abbreviation_afternoon">T</string>
+    <string name="shift_abbreviation_night">N</string>
+    <string name="shift_abbreviation_post_night">S</string>
+    <string name="shift_abbreviation_off">L</string>
+
+    <string name="settings_title">Configurar turnos</string>
+    <string name="settings_intro">Elige tu cadencia y la fecha desde la que comienza. Podrás modificar esta configuración cuando lo necesites.</string>
+    <string name="settings_pattern_heading">Cadencia de turnos</string>
+    <string name="pattern_six_by_six">Cadencia 6x6</string>
+    <string name="pattern_custom">Personalizada</string>
+    <string name="pattern_preview">Secuencia del ciclo</string>
+    <string name="custom_pattern_instructions">Pulsa los turnos en el orden en que se repiten.</string>
+    <string name="custom_pattern_empty">Añade al menos un turno para poder guardar.</string>
+    <string name="custom_pattern_add_shift">Añadir turno %1$s</string>
+    <string name="custom_pattern_remove_last">Borrar último</string>
+    <string name="custom_pattern_clear">Limpiar</string>
+    <string name="reference_date_heading">Fecha de referencia</string>
+    <string name="reference_date_explanation">Esta fecha corresponde al primer turno del ciclo.</string>
+    <string name="date_picker_accept">Aceptar</string>
+    <string name="date_picker_cancel">Cancelar</string>
+    <string name="settings_save">Guardar configuración</string>
+    <string name="settings_saved">Configuración guardada</string>
+    <string name="settings_save_error">No se pudo guardar la configuración</string>
+</resources>
