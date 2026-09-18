@@ -387,52 +387,58 @@ private fun CalendarDayCell(
             .border(borderWidth, borderColor, shape)
             .semantics { contentDescription = dayDescription },
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Text(
-                    text = day.date.dayOfMonth.toString(),
-                    fontWeight = if (isToday) FontWeight.Bold else FontWeight.Medium,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                if (incidentTypes.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(3.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        incidentTypes.forEach { incidentType ->
-                            Box(
-                                modifier = Modifier
-                                    .size(INCIDENT_DOT_DIAMETER)
-                                    .background(
-                                        color = incidentType.visualColor(),
-                                        shape = MaterialTheme.shapes.extraLarge,
-                                    ),
-                            )
-                        }
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    Text(
+                        text = day.date.dayOfMonth.toString(),
+                        fontWeight = if (isToday) FontWeight.Bold else FontWeight.Medium,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    if (incidentTypes.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(INCIDENT_RESERVED_HEIGHT))
                     }
-                    Spacer(modifier = Modifier.height(2.dp))
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(SHIFT_BAND_HEIGHT)
+                        .background(shiftColors.background),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = stringResource(day.shift.abbreviationResource()),
+                        color = shiftColors.foreground,
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.labelSmall,
+                    )
                 }
             }
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(22.dp)
-                    .background(shiftColors.background),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = stringResource(day.shift.abbreviationResource()),
-                    color = shiftColors.foreground,
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.labelSmall,
-                )
+            if (incidentTypes.isNotEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = SHIFT_BAND_HEIGHT + INCIDENT_BAND_GAP),
+                    horizontalArrangement = Arrangement.spacedBy(3.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    incidentTypes.forEach { incidentType ->
+                        Box(
+                            modifier = Modifier
+                                .size(INCIDENT_DOT_DIAMETER)
+                                .background(
+                                    color = incidentType.visualColor(),
+                                    shape = MaterialTheme.shapes.extraLarge,
+                                ),
+                        )
+                    }
+                }
             }
         }
     }
@@ -440,3 +446,7 @@ private fun CalendarDayCell(
 
 private const val CALENDAR_CELL_ASPECT_RATIO = 0.82f
 private val INCIDENT_DOT_DIAMETER = 6.dp
+private val INCIDENT_NUMBER_GAP = 2.dp
+private val INCIDENT_BAND_GAP = 4.dp
+private val INCIDENT_RESERVED_HEIGHT = INCIDENT_NUMBER_GAP + INCIDENT_DOT_DIAMETER + INCIDENT_BAND_GAP
+private val SHIFT_BAND_HEIGHT = 22.dp
