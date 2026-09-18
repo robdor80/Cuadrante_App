@@ -112,8 +112,69 @@ class MonthlyIncidentsTest {
         )
     }
 
+    @Test
+    fun `AP marks its exact LocalDate`() {
+        val target = date(2026, 10, 31)
+
+        assertEquals(
+            listOf(IncidentType.AP),
+            markers(2026, 10, dates("ap", IncidentType.AP, target))[target],
+        )
+    }
+
+    @Test
+    fun `permission marks its exact LocalDate`() {
+        val target = date(2026, 11, 15)
+
+        assertEquals(
+            listOf(IncidentType.PERMISSION),
+            markers(2026, 11, dates("permission", IncidentType.PERMISSION, target))[target],
+        )
+    }
+
+    @Test
+    fun `vacation marks every date in its range`() {
+        val vacation = vacation("vacation", date(2026, 9, 28), date(2026, 10, 2))
+        val octoberMarkers = markers(2026, 10, vacation)
+
+        assertEquals(listOf(date(2026, 10, 1), date(2026, 10, 2)), octoberMarkers.keys.toList())
+        assertTrue(octoberMarkers.values.all { it == listOf(IncidentType.VACATION) })
+    }
+
+    @Test
+    fun `dates outside vacation range are not marked`() {
+        val vacation = vacation("vacation", date(2026, 10, 10), date(2026, 10, 12))
+        val markers = markers(2026, 10, vacation)
+
+        assertTrue(date(2026, 10, 9) !in markers)
+        assertTrue(date(2026, 10, 13) !in markers)
+    }
+
+    @Test
+    fun `multiple incidents on the same date produce multiple associated types`() {
+        val target = date(2026, 10, 31)
+        val ap = dates("ap", IncidentType.AP, target)
+        val permission = dates("permission", IncidentType.PERMISSION, target)
+        val vacation = vacation("vacation", date(2026, 10, 30), date(2026, 11, 2))
+
+        assertEquals(
+            listOf(IncidentType.AP, IncidentType.PERMISSION, IncidentType.VACATION),
+            markers(2026, 10, ap, permission, vacation)[target],
+        )
+    }
+
+    @Test
+    fun `month without incidents produces no markers`() {
+        val ap = dates("ap", IncidentType.AP, date(2026, 9, 21))
+
+        assertTrue(markers(2026, 10, ap).isEmpty())
+    }
+
     private fun filter(year: Int, month: Int, vararg incidents: Incident): List<MonthlyIncidentEntry> =
         incidentsForMonth(incidents.toList(), YearMonth.of(year, month))
+
+    private fun markers(year: Int, month: Int, vararg incidents: Incident) =
+        incidentTypesByDate(incidents.toList(), YearMonth.of(year, month))
 
     private fun dates(id: String, type: IncidentType, vararg dates: LocalDate) =
         DateIncident(id, type, dates.toList().sorted())

@@ -47,6 +47,7 @@ import es.robertodorado.cuadrante.model.VacationIncident
 import es.robertodorado.cuadrante.ui.abbreviationResource
 import es.robertodorado.cuadrante.ui.labelResource
 import es.robertodorado.cuadrante.ui.theme.TodayIndicator
+import es.robertodorado.cuadrante.ui.theme.visualColor
 import es.robertodorado.cuadrante.ui.theme.visualColors
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -73,6 +74,12 @@ fun CalendarScreen(
             .replaceFirstChar { character ->
                 if (character.isLowerCase()) character.titlecase(locale) else character.toString()
             } + " " + calendarMonth.yearMonth.year
+    }
+    val incidentTypesByDate = remember(incidents, calendarMonth.yearMonth) {
+        incidentTypesByDate(
+            incidents = incidents.map(MonthlyIncidentEntry::incident),
+            yearMonth = calendarMonth.yearMonth,
+        )
     }
 
     Scaffold(
@@ -191,6 +198,7 @@ fun CalendarScreen(
                                 } else {
                                     CalendarDayCell(
                                         day = day,
+                                        incidentTypes = incidentTypesByDate[day.date].orEmpty(),
                                         isToday = day.date == today,
                                         locale = locale,
                                         modifier = Modifier
@@ -268,7 +276,7 @@ private fun MonthlyIncidentRow(
     Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
         Text(
             text = typeLabel,
-            color = MaterialTheme.colorScheme.primary,
+            color = entry.incident.type.visualColor(),
             fontWeight = FontWeight.SemiBold,
             style = MaterialTheme.typography.labelLarge,
         )
@@ -349,6 +357,7 @@ private fun WeekdayHeader() {
 @Composable
 private fun CalendarDayCell(
     day: CalendarDay,
+    incidentTypes: List<IncidentType>,
     isToday: Boolean,
     locale: Locale,
     modifier: Modifier = Modifier,
@@ -379,17 +388,36 @@ private fun CalendarDayCell(
             .semantics { contentDescription = dayDescription },
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
-                contentAlignment = Alignment.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
             ) {
                 Text(
                     text = day.date.dayOfMonth.toString(),
                     fontWeight = if (isToday) FontWeight.Bold else FontWeight.Medium,
                     style = MaterialTheme.typography.bodyMedium,
                 )
+                if (incidentTypes.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(3.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        incidentTypes.forEach { incidentType ->
+                            Box(
+                                modifier = Modifier
+                                    .size(INCIDENT_DOT_DIAMETER)
+                                    .background(
+                                        color = incidentType.visualColor(),
+                                        shape = MaterialTheme.shapes.extraLarge,
+                                    ),
+                            )
+                        }
+                    }
+                }
             }
             Box(
                 modifier = Modifier
@@ -410,3 +438,4 @@ private fun CalendarDayCell(
 }
 
 private const val CALENDAR_CELL_ASPECT_RATIO = 0.82f
+private val INCIDENT_DOT_DIAMETER = 6.dp
