@@ -170,11 +170,103 @@ class MonthlyIncidentsTest {
         assertTrue(markers(2026, 10, ap).isEmpty())
     }
 
+    @Test
+    fun `two separate AP records in one month are grouped`() {
+        val groups = groups(
+            2026,
+            10,
+            dates("ap-1", IncidentType.AP, date(2026, 10, 29)),
+            dates("ap-2", IncidentType.AP, date(2026, 10, 31)),
+        )
+
+        assertEquals(1, groups.size)
+        assertEquals(IncidentType.AP, groups.single().type)
+    }
+
+    @Test
+    fun `grouped dates are chronological`() {
+        val group = groups(
+            2026,
+            10,
+            dates("late", IncidentType.AP, date(2026, 10, 31)),
+            dates("early", IncidentType.AP, date(2026, 10, 5)),
+        ).single()
+
+        assertEquals(listOf(date(2026, 10, 5), date(2026, 10, 31)), group.datesInMonth)
+    }
+
+    @Test
+    fun `multi-date AP and independent AP merge for presentation`() {
+        val group = groups(
+            2026,
+            10,
+            dates("multi", IncidentType.AP, date(2026, 10, 29), date(2026, 10, 30)),
+            dates("single", IncidentType.AP, date(2026, 10, 31)),
+        ).single()
+
+        assertEquals(
+            listOf(date(2026, 10, 29), date(2026, 10, 30), date(2026, 10, 31)),
+            group.datesInMonth,
+        )
+    }
+
+    @Test
+    fun `separate permissions are grouped`() {
+        val group = groups(
+            2026,
+            10,
+            dates("permission-1", IncidentType.PERMISSION, date(2026, 10, 17)),
+            dates("permission-2", IncidentType.PERMISSION, date(2026, 10, 8)),
+        ).single()
+
+        assertEquals(IncidentType.PERMISSION, group.type)
+        assertEquals(listOf(date(2026, 10, 8), date(2026, 10, 17)), group.datesInMonth)
+    }
+
+    @Test
+    fun `separate vacation ranges are grouped chronologically`() {
+        val first = vacation("vacation-1", date(2026, 10, 2), date(2026, 10, 6))
+        val second = vacation("vacation-2", date(2026, 10, 21), date(2026, 10, 25))
+        val group = groups(2026, 10, second, first).single()
+
+        assertEquals(IncidentType.VACATION, group.type)
+        assertEquals(listOf(first, second), group.vacationRanges)
+    }
+
+    @Test
+    fun `monthly groups do not mix dates from different months`() {
+        val ap = dates(
+            "ap",
+            IncidentType.AP,
+            date(2026, 9, 30),
+            date(2026, 10, 1),
+        )
+
+        assertEquals(listOf(date(2026, 9, 30)), groups(2026, 9, ap).single().datesInMonth)
+        assertEquals(listOf(date(2026, 10, 1)), groups(2026, 10, ap).single().datesInMonth)
+    }
+
+    @Test
+    fun `grouping removes duplicate dates`() {
+        val repeatedDate = date(2026, 10, 29)
+        val group = groups(
+            2026,
+            10,
+            dates("ap-1", IncidentType.AP, repeatedDate),
+            dates("ap-2", IncidentType.AP, repeatedDate),
+        ).single()
+
+        assertEquals(listOf(repeatedDate), group.datesInMonth)
+    }
+
     private fun filter(year: Int, month: Int, vararg incidents: Incident): List<MonthlyIncidentEntry> =
         incidentsForMonth(incidents.toList(), YearMonth.of(year, month))
 
     private fun markers(year: Int, month: Int, vararg incidents: Incident) =
         incidentTypesByDate(incidents.toList(), YearMonth.of(year, month))
+
+    private fun groups(year: Int, month: Int, vararg incidents: Incident) =
+        groupMonthlyIncidents(filter(year, month, *incidents))
 
     private fun dates(id: String, type: IncidentType, vararg dates: LocalDate) =
         DateIncident(id, type, dates.toList().sorted())

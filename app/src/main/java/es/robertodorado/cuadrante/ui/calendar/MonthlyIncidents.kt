@@ -13,6 +13,12 @@ data class MonthlyIncidentEntry(
     val firstRelevantDate: LocalDate,
 )
 
+data class MonthlyIncidentGroup(
+    val type: IncidentType,
+    val datesInMonth: List<LocalDate>,
+    val vacationRanges: List<VacationIncident>,
+)
+
 fun incidentsForMonth(
     incidents: List<Incident>,
     yearMonth: YearMonth,
@@ -49,6 +55,29 @@ fun incidentsForMonth(
     }.sortedBy(MonthlyIncidentEntry::firstRelevantDate)
 }
 
+fun groupMonthlyIncidents(
+    entries: List<MonthlyIncidentEntry>,
+): List<MonthlyIncidentGroup> {
+    val entriesByType = entries.groupBy { it.incident.type }
+
+    return MONTHLY_INCIDENT_TYPE_ORDER.mapNotNull { type ->
+        val typeEntries = entriesByType[type].orEmpty()
+        if (typeEntries.isEmpty()) return@mapNotNull null
+
+        MonthlyIncidentGroup(
+            type = type,
+            datesInMonth = typeEntries
+                .flatMap(MonthlyIncidentEntry::datesInMonth)
+                .distinct()
+                .sorted(),
+            vacationRanges = typeEntries
+                .mapNotNull { it.incident as? VacationIncident }
+                .distinctBy { it.startDate to it.endDate }
+                .sortedWith(compareBy(VacationIncident::startDate, VacationIncident::endDate)),
+        )
+    }
+}
+
 fun incidentTypesByDate(
     incidents: List<Incident>,
     yearMonth: YearMonth,
@@ -79,3 +108,9 @@ fun incidentTypesByDate(
 
     return typesByDate.mapValues { (_, types) -> types.distinct() }
 }
+
+private val MONTHLY_INCIDENT_TYPE_ORDER = listOf(
+    IncidentType.AP,
+    IncidentType.PERMISSION,
+    IncidentType.VACATION,
+)

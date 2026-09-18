@@ -41,7 +41,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import es.robertodorado.cuadrante.R
-import es.robertodorado.cuadrante.model.DateIncident
 import es.robertodorado.cuadrante.model.IncidentType
 import es.robertodorado.cuadrante.model.VacationIncident
 import es.robertodorado.cuadrante.ui.abbreviationResource
@@ -226,6 +225,8 @@ private fun MonthlyIncidentsCard(
     incidents: List<MonthlyIncidentEntry>,
     locale: Locale,
 ) {
+    val groups = remember(incidents) { groupMonthlyIncidents(incidents) }
+
     Surface(
         color = MaterialTheme.colorScheme.surface,
         shape = MaterialTheme.shapes.large,
@@ -241,18 +242,18 @@ private fun MonthlyIncidentsCard(
                 fontWeight = FontWeight.SemiBold,
                 style = MaterialTheme.typography.titleMedium,
             )
-            if (incidents.isEmpty()) {
+            if (groups.isEmpty()) {
                 Text(
                     text = stringResource(R.string.calendar_incidents_description),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyMedium,
                 )
             } else {
-                incidents.forEachIndexed { index, entry ->
+                groups.forEachIndexed { index, group ->
                     if (index > 0) {
                         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                     }
-                    MonthlyIncidentRow(entry = entry, locale = locale)
+                    MonthlyIncidentRow(group = group, locale = locale)
                 }
             }
         }
@@ -261,22 +262,22 @@ private fun MonthlyIncidentsCard(
 
 @Composable
 private fun MonthlyIncidentRow(
-    entry: MonthlyIncidentEntry,
+    group: MonthlyIncidentGroup,
     locale: Locale,
 ) {
     val typeLabel = stringResource(
-        when (entry.incident.type) {
+        when (group.type) {
             IncidentType.AP -> R.string.incident_type_ap
             IncidentType.PERMISSION -> R.string.incident_type_permission
             IncidentType.VACATION -> R.string.incident_type_vacation
         },
     )
-    val dateText = remember(entry, locale) { formatMonthlyIncident(entry, locale) }
+    val dateText = remember(group, locale) { formatMonthlyIncidentGroup(group, locale) }
 
     Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
         Text(
             text = typeLabel,
-            color = entry.incident.type.visualColor(),
+            color = group.type.visualColor(),
             fontWeight = FontWeight.SemiBold,
             style = MaterialTheme.typography.labelLarge,
         )
@@ -288,20 +289,37 @@ private fun MonthlyIncidentRow(
     }
 }
 
-private fun formatMonthlyIncident(
-    entry: MonthlyIncidentEntry,
+private fun formatMonthlyIncidentGroup(
+    group: MonthlyIncidentGroup,
     locale: Locale,
 ): String {
     val shortFormatter = DateTimeFormatter.ofPattern("d MMM", locale)
-    return when (val incident = entry.incident) {
-        is DateIncident -> entry.datesInMonth.joinToString(", ") { it.format(shortFormatter) }
-        is VacationIncident -> {
-            val formatter = if (incident.startDate.year == incident.endDate.year) {
-                shortFormatter
-            } else {
-                DateTimeFormatter.ofPattern("d MMM yyyy", locale)
-            }
-            "${incident.startDate.format(formatter)} – ${incident.endDate.format(formatter)}"
+    return when (group.type) {
+        IncidentType.AP,
+        IncidentType.PERMISSION,
+        -> group.datesInMonth.joinToString(" / ") { it.format(shortFormatter) }
+        IncidentType.VACATION -> group.vacationRanges.joinToString(" / ") { vacation ->
+            formatVacationRange(vacation, locale)
+        }
+    }
+}
+
+private fun formatVacationRange(
+    vacation: VacationIncident,
+    locale: Locale,
+): String {
+    val start = vacation.startDate
+    val end = vacation.endDate
+    val shortFormatter = DateTimeFormatter.ofPattern("d MMM", locale)
+    return when {
+        start == end -> start.format(shortFormatter)
+        start.year == end.year && start.month == end.month ->
+            "${start.dayOfMonth}–${end.format(shortFormatter)}"
+        start.year == end.year ->
+            "${start.format(shortFormatter)} – ${end.format(shortFormatter)}"
+        else -> {
+            val formatter = DateTimeFormatter.ofPattern("d MMM yyyy", locale)
+            "${start.format(formatter)} – ${end.format(formatter)}"
         }
     }
 }
