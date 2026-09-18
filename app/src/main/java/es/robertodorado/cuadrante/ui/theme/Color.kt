@@ -6,6 +6,7 @@ internal val BluePrimary = Color(0xFF0057A8)
 internal val BluePrimaryDark = Color(0xFF9CCAFF)
 internal val BlueContainer = Color(0xFFD3E4FF)
 internal val BlueContainerDark = Color(0xFF004881)
+internal val TodayIndicator = Color(0xFFB6DB00)
 
 internal val ShiftMorning = Color(0xFFB3261E)
 internal val ShiftAfternoon = Color(0xFFF4B400)

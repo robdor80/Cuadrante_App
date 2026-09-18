@@ -2,6 +2,8 @@ package es.robertodorado.cuadrante.ui.calendar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
@@ -34,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import es.robertodorado.cuadrante.R
 import es.robertodorado.cuadrante.ui.abbreviationResource
 import es.robertodorado.cuadrante.ui.labelResource
+import es.robertodorado.cuadrante.ui.theme.TodayIndicator
 import es.robertodorado.cuadrante.ui.theme.visualColors
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -90,6 +93,7 @@ fun CalendarScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(contentPadding)
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 8.dp),
         ) {
             Surface(
@@ -160,6 +164,35 @@ fun CalendarScreen(
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+            MonthlyIncidentsCard()
+        }
+    }
+}
+
+@Composable
+private fun MonthlyIncidentsCard() {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+        shape = MaterialTheme.shapes.large,
+        tonalElevation = 1.dp,
+        modifier = Modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            Text(
+                text = stringResource(R.string.calendar_incidents_title),
+                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                text = stringResource(R.string.calendar_incidents_description),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyMedium,
+            )
         }
     }
 }
@@ -234,8 +267,8 @@ private fun CalendarDayCell(
         shiftLabel,
     )
     val shape = MaterialTheme.shapes.small
-    val borderColor = if (isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
-    val borderWidth = if (isToday) 2.dp else 1.dp
+    val borderColor = if (isToday) TodayIndicator else MaterialTheme.colorScheme.outlineVariant
+    val borderWidth = if (isToday) 3.dp else 1.dp
 
     Surface(
         color = MaterialTheme.colorScheme.surfaceVariant,

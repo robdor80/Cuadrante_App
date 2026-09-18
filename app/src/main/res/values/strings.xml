@@ -44,6 +44,8 @@
     <string name="calendar_next_month">Mes siguiente</string>
     <string name="calendar_go_to_today">Ir a hoy</string>
     <string name="calendar_day_description">%1$s, turno %2$s</string>
+    <string name="calendar_incidents_title">Ausencias y permisos</string>
+    <string name="calendar_incidents_description">AP, vacaciones y otras incidencias del mes</string>
     <string name="weekday_monday_short">L</string>
     <string name="weekday_tuesday_short">M</string>
     <string name="weekday_wednesday_short">X</string>
