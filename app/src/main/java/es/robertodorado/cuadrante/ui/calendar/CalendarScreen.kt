@@ -417,6 +417,7 @@ private fun CalendarDayCell(
                             )
                         }
                     }
+                    Spacer(modifier = Modifier.height(2.dp))
                 }
             }
             Box(
