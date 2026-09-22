@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Política de privacidad de Cuadrante App, desarrollada por RobDev80."
+    >
+
+    <meta name="theme-color" content="#0057A8">
+
+    <title>Política de privacidad | Cuadrante App</title>
+
+    <!-- Icono de la aplicación -->
+    <link
+        rel="icon"
+        type="image/png"
+        href="artwork/icono_app.png"
+    >
+
+    <style>
+        :root {
+            --primary: #0057A8;
+            --primary-dark: #003E79;
+            --primary-soft: #D3E4FF;
+
+            --background: #F4F7FA;
+            --surface: #FFFFFF;
+            --surface-alt: #E9EEF3;
+
+            --text-primary: #17202A;
+            --text-secondary: #5D6873;
+
+            --border: #DCE3E9;
+
+            --morning: #B3261E;
+            --afternoon: #F4B400;
+            --night: #17365D;
+            --post-night: #2E7D32;
+            --off: #42464D;
+
+            --ap: #F401FC;
+            --vacation: #54B875;
+            --permission: #FC6200;
+
+            --today: #B6DB00;
+
+            --shadow:
+                0 10px 30px rgba(20, 45, 70, 0.08),
+                0 2px 8px rgba(20, 45, 70, 0.05);
+
+            --radius-large: 24px;
+            --radius-medium: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+
+            font-family:
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                Roboto,
+                Helvetica,
+                Arial,
+                sans-serif;
+
+            background: var(--background);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+
+        a {
+            color: var(--primary);
+        }
+
+        a:hover {
+            color: var(--primary-dark);
+        }
+
+        .page {
+            width: min(920px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 40px 0 60px;
+        }
+
+        .header {
+            background: var(--surface);
+            border-radius: var(--radius-large);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .header-accent {
+            height: 8px;
+            background: var(--primary);
+        }
+
+        .header-content {
+            padding: 36px 40px 34px;
+            text-align: center;
+        }
+
+        .app-icon {
+            width: 112px;
+            height: 112px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto 20px;
+            border-radius: 24px;
+        }
+
+        .developer {
+            display: inline-block;
+
+            color: var(--primary);
+            background: var(--primary-soft);
+
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+
+            padding: 6px 12px;
+            border-radius: 999px;
+
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            margin: 0;
+
+            font-size: clamp(1.8rem, 5vw, 2.6rem);
+            line-height: 1.2;
+
+            color: var(--text-primary);
+        }
+
+        .subtitle {
+            margin: 10px 0 0;
+            color: var(--primary);
+            font-size: 1.05rem;
+            font-weight: 600;
+        }
+
+        .intro {
+            margin: 24px auto 0;
+            max-width: 690px;
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .privacy-highlight {
+            margin-top: 28px;
+
+            padding: 18px 20px;
+
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-medium);
+
+            text-align: left;
+        }
+
+        .privacy-highlight strong {
+            color: var(--primary);
+        }
+
+        .shift-colors {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 9px;
+            margin-top: 24px;
+        }
+
+        .shift-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .morning {
+            background: var(--morning);
+        }
+
+        .afternoon {
+            background: var(--afternoon);
+        }
+
+        .night {
+            background: var(--night);
+        }
+
+        .post-night {
+            background: var(--post-night);
+        }
+
+        .off {
+            background: var(--off);
+        }
+
+        main {
+            display: grid;
+            gap: 18px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid rgba(220, 227, 233, 0.7);
+            border-radius: var(--radius-large);
+
+            padding: 28px 32px;
+
+            box-shadow:
+                0 4px 18px rgba(20, 45, 70, 0.045);
+        }
+
+        .section-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            min-width: 32px;
+            height: 32px;
+
+            margin-right: 10px;
+
+            border-radius: 10px;
+
+            background: var(--primary-soft);
+            color: var(--primary);
+
+            font-size: 0.9rem;
+            font-weight: 800;
+        }
+
+        h2 {
+            display: flex;
+            align-items: center;
+
+            margin: 0 0 14px;
+
+            font-size: 1.25rem;
+            line-height: 1.35;
+        }
+
+        p {
+            margin: 0 0 12px;
+        }
+
+        p:last-child {
+            margin-bottom: 0;
+        }
+
+        ul {
+            margin: 12px 0 0;
+            padding-left: 22px;
+        }
+
+        li {
+            margin: 6px 0;
+        }
+
+        .incident-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+
+            margin-top: 18px;
+        }
+
+        .incident-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+
+            padding: 7px 11px;
+
+            border-radius: 999px;
+            background: var(--background);
+
+            font-size: 0.87rem;
+            font-weight: 650;
+        }
+
+        .incident-chip::before {
+            content: "";
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+        }
+
+        .incident-ap::before {
+            background: var(--ap);
+        }
+
+        .incident-vacation::before {
+            background: var(--vacation);
+        }
+
+        .incident-permission::before {
+            background: var(--permission);
+        }
+
+        .contact-box {
+            margin-top: 16px;
+
+            padding: 18px 20px;
+
+            background: var(--background);
+            border-radius: var(--radius-medium);
+        }
+
+        .contact-box a {
+            font-weight: 700;
+            word-break: break-word;
+        }
+
+        .footer {
+            text-align: center;
+            padding-top: 30px;
+
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+        }
+
+        .footer strong {
+            color: var(--primary);
+        }
+
+        .updated {
+            display: inline-block;
+            margin-top: 10px;
+
+            padding: 6px 12px;
+
+            background: var(--surface-alt);
+            border-radius: 999px;
+
+            font-size: 0.82rem;
+        }
+
+        @media (max-width: 640px) {
+            .page {
+                width: min(100% - 20px, 920px);
+                padding-top: 18px;
+                padding-bottom: 30px;
+            }
+
+            .header-content {
+                padding: 28px 22px;
+            }
+
+            .app-icon {
+                width: 92px;
+                height: 92px;
+                border-radius: 20px;
+            }
+
+            .card {
+                padding: 22px 20px;
+                border-radius: 20px;
+            }
+
+            h2 {
+                align-items: flex-start;
+                font-size: 1.15rem;
+            }
+
+            .section-number {
+                flex: 0 0 auto;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="page">
+
+    <header class="header">
+
+        <div class="header-accent"></div>
+
+        <div class="header-content">
+
+            <img
+                class="app-icon"
+                src="artwork/icono_app.png"
+                alt="Icono de Cuadrante App"
+            >
+
+            <div class="developer">
+                ROBDEV80
+            </div>
+
+            <h1>
+                Política de privacidad
+            </h1>
+
+            <div class="subtitle">
+                Cuadrante App
+            </div>
+
+            <p class="intro">
+                Cuadrante App es una aplicación de calendario de turnos
+                diseñada para funcionar de forma local en el dispositivo
+                del usuario, sin necesidad de crear una cuenta ni utilizar
+                servicios externos para almacenar su información.
+            </p>
+
+            <div class="privacy-highlight">
+                <strong>Resumen:</strong>
+                Cuadrante App no recopila, transmite, comparte ni vende
+                datos personales del usuario. La configuración de turnos
+                y las incidencias introducidas en la aplicación se
+                almacenan localmente en el dispositivo.
+            </div>
+
+            <div
+                class="shift-colors"
+                aria-hidden="true"
+            >
+                <span class="shift-dot morning"></span>
+                <span class="shift-dot afternoon"></span>
+                <span class="shift-dot night"></span>
+                <span class="shift-dot post-night"></span>
+                <span class="shift-dot off"></span>
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <main>
+
+        <section class="card">
+
+            <h2>
+                <span class="section-number">1</span>
+                Responsable
+            </h2>
+
+            <p>
+                Cuadrante App ha sido desarrollada y publicada por
+                <strong>RobDev80</strong>.
+            </p>
+
+            <p>
+                Esta política explica qué información utiliza la aplicación,
+                cómo se almacena y qué control mantiene el usuario sobre sus
+                datos.
+            </p>
+
+        </section>
+
+
+        <section class="card">
+
+            <h2>
+                <span class="section-number">2</span>
+                Datos personales
+            </h2>
+
+            <p>
+                Cuadrante App <strong>no recopila datos personales</strong>.
+            </p>
+
+            <p>
+                La aplicación no solicita ni recopila información como:
+            </p>
+
+            <ul>
+                <li>nombre o apellidos;</li>
+                <li>dirección de correo electrónico;</li>
+                <li>número de teléfono;</li>
+                <li>dirección postal;</li>
+                <li>ubicación;</li>
+                <li>contactos;</li>
+                <li>fotografías o archivos personales;</li>
+                <li>identificadores publicitarios;</li>
+                <li>datos financieros;</li>
+                <li>credenciales de acceso.</li>
+            </ul>
+
+        </section>
+
+
+        <section class="card">
+
+            <h2>
+                <span class="section-number">3</span>
+                Datos almacenados en el dispositivo
+            </h2>
+
+            <p>
+                Cuadrante App almacena localmente únicamente la información
+                necesaria para proporcionar sus funciones.
+            </p>
+
+            <p>
+                Esto puede incluir:
+            </p>
+
+            <ul>
+                <li>la cadencia o patrón de turnos configurado;</li>
+                <li>la fecha de referencia del ciclo;</li>
+                <li>la configuración de la aplicación;</li>
+                <li>días de AP registrados por el usuario;</li>
+                <li>permisos registrados por el usuario;</li>
+                <li>periodos de vacaciones registrados por el usuario.</li>
+            </ul>
+
+            <div class="incident-row">
+                <span class="incident-chip incident-ap">
+                    AP
+                </span>
+
+                <span class="incident-chip incident-vacation">
+                    Vacaciones
+                </span>
+
+                <span class="incident-chip incident-permission">
+                    Permisos
+                </span>
+            </div>
+
+            <p style="margin-top: 18px;">
+                Esta información permanece almacenada localmente en el
+                dispositivo y no es enviada al desarrollador.
+            </p>
+
+        </section>
+
+
+        <section class="card">
+
+            <h2>
+                <span class="section-number">4</span>
+                Conexión a Internet
+            </h2>
+
+            <p>
+                Las funciones principales de Cuadrante App no requieren
+                conexión a Internet.
+            </p>
+
+            <p>
+                La aplicación no transmite la configuración de turnos,
+                los AP, los permisos ni las vacaciones a servidores
+                externos.
+            </p>
+
+        </section>
+
+
+        <section class="card">
+
+            <h2>
+                <span class="section-number">5</span>
+                Cuentas de usuario
+            </h2>
+
+            <p>
+                Cuadrante App no requiere registro, inicio de sesión ni
+                creación de una cuenta de usuario.
+            </p>
+
+            <p>
+                No se solicitan nombres de usuario, contraseñas ni otros
+                datos de autenticación.
+            </p>
+
+        </section>
+
+
+        <section class="card">
+
+            <h2>
+                <span class="section-number">6</span>
+                Publicidad y analítica
+            </h2>
+
+            <p>
+                Cuadrante App no incluye publicidad.
+            </p>
+
+            <p>
+                La aplicación tampoco utiliza sistemas de analítica,
+                seguimiento publicitario ni tecnologías destinadas a
+                elaborar perfiles de los usuarios.
+            </p>
+
+        </section>
+
+
+        <section class="card">
+
+            <h2>
+                <span class="section-number">7</span>
+                Servicios de terceros
+            </h2>
+
+            <p>
+                Cuadrante App no utiliza servicios externos para almacenar
+                los datos introducidos por el usuario.
+            </p>
+
+            <p>
+                No utiliza Firebase, servicios propios en la nube,
+                plataformas publicitarias ni sistemas externos de
+                sincronización para gestionar los turnos o incidencias
+                registrados en la aplicación.
+            </p>
+
+        </section>
+
+
+        <section class="card">
+
+            <h2>
+                <span class="section-number">8</span>
+                Compartición y venta de datos
+            </h2>
+
+            <p>
+                Cuadrante App no vende, alquila, comercializa ni comparte
+                datos personales del usuario con terceros.
+            </p>
+
+            <p>
+                El desarrollador no recibe los datos de turnos, AP,
+                permisos o vacaciones almacenados en la aplicación.
+            </p>
+
+        </section>
+
+
+        <section class="card">
+
+            <h2>
+                <span class="section-number">9</span>
+                Eliminación de los datos
+            </h2>
+
+            <p>
+                Los datos gestionados por Cuadrante App permanecen en el
+                dispositivo del usuario.
+            </p>
+
+            <p>
+                El usuario puede eliminar los registros disponibles desde
+                las propias funciones de la aplicación.
+            </p>
+
+            <p>
+                También puede eliminar los datos asociados a la aplicación
+                mediante las opciones de almacenamiento de Android o
+                desinstalando Cuadrante App del dispositivo.
+            </p>
+
+        </section>
+
+
+        <section class="card">
+
+            <h2>
+                <span class="section-number">10</span>
+                Menores de edad
+            </h2>
+
+            <p>
+                Cuadrante App no está diseñada para recopilar información
+                personal de menores ni de ningún otro usuario.
+            </p>
+
+            <p>
+                Dado que la aplicación no requiere cuentas y no recopila
+                datos personales, el desarrollador no recibe información
+                relativa a la edad de sus usuarios.
+            </p>
+
+        </section>
+
+
+        <section class="card">
+
+            <h2>
+                <span class="section-number">11</span>
+                Seguridad
+            </h2>
+
+            <p>
+                Cuadrante App ha sido diseñada siguiendo un enfoque de
+                minimización de datos: únicamente almacena localmente la
+                información necesaria para proporcionar sus funciones.
+            </p>
+
+            <p>
+                Al no transmitirse la información de turnos e incidencias a
+                servidores externos, se reduce la exposición de estos datos
+                fuera del dispositivo del usuario.
+            </p>
+
+        </section>
+
+
+        <section class="card">
+
+            <h2>
+                <span class="section-number">12</span>
+                Cambios en esta política
+            </h2>
+
+            <p>
+                Esta política de privacidad podrá actualizarse si futuras
+                versiones de Cuadrante App incorporan nuevas funciones que
+                modifiquen la forma en que se utiliza o procesa información.
+            </p>
+
+            <p>
+                Cuando se produzcan cambios relevantes, esta página se
+                actualizará para reflejar correctamente el funcionamiento
+                de la aplicación.
+            </p>
+
+        </section>
+
+
+        <section class="card">
+
+            <h2>
+                <span class="section-number">13</span>
+                Contacto
+            </h2>
+
+            <p>
+                Para cualquier consulta relacionada con Cuadrante App o con
+                esta política de privacidad puedes contactar con el
+                desarrollador.
+            </p>
+
+            <div class="contact-box">
+
+                <strong>Desarrollador:</strong>
+                RobDev80
+
+                <br>
+
+                <strong>Correo electrónico:</strong>
+
+                <a href="mailto:rob.dor.80@gmail.com">
+                    rob.dor.80@gmail.com
+                </a>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <footer class="footer">
+
+        <strong>Cuadrante App</strong>
+        · RobDev80
+
+        <br>
+
+        <span class="updated">
+            Última actualización: 22 de septiembre de 2026
+        </span>
+
+    </footer>
+
+</div>
+
+</body>
+</html>
