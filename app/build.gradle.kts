@@ -16,11 +16,17 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0.0"
+        manifestPlaceholders["appLabel"] = "@string/app_name"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-DEV"
+            manifestPlaceholders["appLabel"] = "Cuadrante DEV"
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(

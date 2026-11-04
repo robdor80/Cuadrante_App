@@ -1,5 +1,6 @@
 # Gradle
 .gradle/
+.kotlin/
 build/
 **/build/
 
@@ -22,7 +23,13 @@ Thumbs.db
 *.keystore
 keystore.properties
 secrets.properties
+*.p12
+*.pfx
+*.pem
+*.key
 
 # Generated bundles and packages
 *.aab
 *.apk
+*.apk.idsig
+dist/
