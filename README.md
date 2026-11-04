@@ -21,8 +21,14 @@ Base Android nativa para una aplicación local de calendario de turnos.
 ## Compilación
 
 ```shell
-./gradlew test assembleDebug
+./gradlew test lint assembleDebug assembleRelease --no-daemon
 ```
+
+Debug se instala como `es.robertodorado.cuadrante.debug` / «Cuadrante DEV».
+Release conserva `es.robertodorado.cuadrante` y se compila sin firma: antes de
+distribuirla hay que usar una clave persistente externa y verificar compatibilidad
+con instalaciones anteriores. Véase la [guía de publicación en RobStore](docs/ROBSTORE-PUBLICACION.md)
+y el [informe de validación](docs/ROBSTORE-AUDITORIA.md).
 
 ## Motor de turnos
 
