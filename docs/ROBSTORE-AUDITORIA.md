@@ -1,5 +1,8 @@
 # Auditoría para la primera Release — 4 de noviembre de 2026 (UTC)
 
+> **Actualización de estado — 4 de noviembre de 2026:** este documento conserva la auditoría *previa* a la publicación. Posteriormente se publicó [v1.0.0](https://github.com/robdor80/Cuadrante_App/releases/tag/v1.0.0), con etiqueta en `8513721961fd980347bf63c7bc3ab6470cf1d329`, APK firmado externamente y respaldado por clave privada custodiada fuera de Git. En RobStore DEV se comprobó descubrimiento, SHA-256 indicado por GitHub, descarga, instalación nueva y arranque en Galaxy Tab S9+. Los apartados que dicen «pendiente», «no se publica» o «no existe Release» describen únicamente el estado *anterior*. Sigue sin haberse probado una actualización sobre una instalación antigua con datos.
+
+
 Alcance: `robdor80/Cuadrante_App`, rama
 `codex/robstore-primer-release-preparacion`, PR Draft #1. Punto de partida:
 `33ba8e589434ebff3a03a61a15edc6d7990f1121`. No se publica una Release en esta tarea.
