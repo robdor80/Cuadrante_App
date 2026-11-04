@@ -1,0 +1,114 @@
+name: APK Release sin firmar
+
+on:
+  push:
+    branches: [codex/robstore-primer-release-preparacion]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: github.repository == 'robdor80/Cuadrante_App' && github.ref == 'refs/heads/codex/robstore-primer-release-preparacion'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Checkout del HEAD de la rama
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: JDK 17
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: SDK Android
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36' 'build-tools;35.0.0'
+      - name: Tests, lint y compilación Release
+        shell: bash
+        run: ./gradlew test lint assembleRelease --no-daemon --console=plain
+      - name: Verificar APK sin firmar y preparar entrega
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          mkdir entrega
+          cp app/build/outputs/apk/release/app-release-unsigned.apk entrega/
+          APK=entrega/app-release-unsigned.apk
+          BT="$ANDROID_HOME/build-tools/35.0.0"
+          "$BT/aapt" dump badging "$APK" > /tmp/badging.txt
+          "$BT/zipalign" -c -P 16 4 "$APK" > /tmp/zipalign.txt
+          if "$BT/apksigner" verify --verbose --print-certs "$APK" > /tmp/signature.txt 2>&1; then
+            echo 'ERROR: el APK está firmado'; exit 1
+          fi
+          python3 - <<'PY'
+          import hashlib, os, pathlib, re, struct, xml.etree.ElementTree as ET, zipfile
+
+          apk = pathlib.Path('entrega/app-release-unsigned.apk')
+          badging = pathlib.Path('/tmp/badging.txt').read_text()
+          assert re.search(r"^package: name='es\.robertodorado\.cuadrante' versionCode='1' versionName='1\.0\.0'", badging, re.M), badging
+          assert "sdkVersion:'26'" in badging and "targetSdkVersion:'36'" in badging
+          assert 'application-debuggable' not in badging
+          with zipfile.ZipFile(apk) as z:
+              assert z.testzip() is None, 'CRC incorrecto'
+              assert 'AndroidManifest.xml' in z.namelist() and 'classes.dex' in z.namelist()
+              assert not any(re.match(r'META-INF/.*\.(SF|RSA|DSA|EC)$', n, re.I) for n in z.namelist()), 'Firma JAR presente'
+              # El bloque de firma APK v2/v3 termina justo antes del directorio central.
+              data = apk.read_bytes()
+              eocd = data.rfind(b'PK\x05\x06')
+              assert eocd >= 0
+              central = struct.unpack_from('<I', data, eocd + 16)[0]
+              assert data[central-16:central] != b'APK Sig Block 42', 'Bloque de firma presente'
+          suites = sorted(pathlib.Path('app/build/test-results').glob('test*UnitTest/TEST-*.xml'))
+          totals = {}
+          for f in suites:
+              root = ET.parse(f).getroot()
+              row = totals.setdefault(f.parent.name, [0, 0, 0, 0])
+              for i, key in enumerate(('tests', 'failures', 'errors', 'skipped')):
+                  row[i] += int(root.get(key, 0))
+          assert set(totals) == {'testDebugUnitTest', 'testReleaseUnitTest'}, totals
+          assert all(v[0] > 0 and v[1:] == [0, 0, 0] for v in totals.values()), totals
+          lint = ET.parse('app/build/reports/lint-results.xml').getroot()
+          issues = list(lint.iter('issue'))
+          errors = sum(i.get('severity') in ('Error', 'Fatal') for i in issues)
+          warnings = sum(i.get('severity') == 'Warning' for i in issues)
+          assert errors == 0, errors
+          digest = hashlib.sha256(apk.read_bytes()).hexdigest()
+          pathlib.Path('entrega/app-release-unsigned.apk.sha256').write_text(f'{digest}  {apk.name}\n')
+          report = '\n'.join([
+              'Cuadrante App — compilación Release sin firmar',
+              f"HEAD: {os.environ['GITHUB_SHA']}",
+              f"CI: {os.environ['GITHUB_SERVER_URL']}/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}",
+              f"Intento: {os.environ['GITHUB_RUN_ATTEMPT']}",
+              'Comando: ./gradlew test lint assembleRelease --no-daemon --console=plain',
+              f'Tests (tests, fallos, errores, omitidos): {totals}',
+              f'Lint: {errors} errores; {warnings} avisos',
+              'Release: BUILD SUCCESSFUL',
+              'Paquete: es.robertodorado.cuadrante; versionName=1.0.0; versionCode=1',
+              'SDK: min=26, target=36; no depurable',
+              'Integridad ZIP/CRC: correcta; zipalign -c -P 16 4: correcto',
+              'Sin firma JAR ni bloque APK v2/v3; apksigner verify rechaza el APK como se espera.',
+              f'Archivo: {apk.name}; bytes: {apk.stat().st_size}',
+              f'SHA-256: {digest}',
+              'Este APK sin firmar requiere firma posterior antes de instalarse.',
+              'No usar este hash como hash del futuro APK firmado cuadrante-v1.0.0.apk.',
+              'No se publica una GitHub Release ni se crean etiquetas.',
+          ]) + '\n'
+          pathlib.Path('entrega/INFORME-COMPILACION.txt').write_text(report)
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as out:
+              out.write(report)
+          print(report)
+          PY
+          (cd entrega && sha256sum -c app-release-unsigned.apk.sha256)
+      - name: Subir APK, SHA-256 e informe
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: cuadrante-v1.0.0-unsigned-${{ github.sha }}
+          path: entrega/
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
