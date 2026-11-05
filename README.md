@@ -34,7 +34,7 @@ y el [informe de validación](docs/ROBSTORE-AUDITORIA.md).
 
 La **Release estable [v1.0.0](https://github.com/robdor80/Cuadrante_App/releases/tag/v1.0.0)** se publicó el 4 de noviembre de 2026 desde el commit `8513721961fd980347bf63c7bc3ab6470cf1d329`. Contiene `cuadrante-v1.0.0.apk` firmado fuera del repositorio con una clave privada persistente. RobStore DEV descubrió automáticamente la Release y descargó, verificó e instaló la aplicación en una Samsung Galaxy Tab S9+. Este ensayo confirma una instalación nueva, **no** una actualización sobre datos existentes.
 
-La clave privada no está en GitHub ni en el proyecto; su custodio conserva un respaldo cifrado fuera del repositorio. Para publicar versiones posteriores: incrementar `versionCode`, utilizar un nuevo tag/Release y nombre de asset coherente con `robstore.json`, y firmar con la misma clave. No sustituir ni mover la etiqueta `v1.0.0`. La guía histórica de preparación y la auditoría se conservan en `docs/`.
+La clave privada no está en GitHub ni en el proyecto; su custodio conserva un respaldo cifrado fuera del repositorio. El candidato actual es **1.0.1 / code 2**, con AP_POLICY_V1. Las publicaciones posteriores usan el flujo RS-05, que genera el contrato y catálogo definitivo desde el APK firmado con esa misma identidad histórica. No sustituir ni mover la etiqueta `v1.0.0`. La guía histórica de preparación y la auditoría se conservan en `docs/`.
 
 ## Motor de turnos
 
@@ -43,4 +43,6 @@ La clave privada no está en GitHub ni en el proyecto; su custodio conserva un r
 La cadencia elegida, su secuencia completa y la fecha de referencia se guardan localmente mediante Preferences DataStore.
 
 Distribución futura por Codex Cloud + GitHub Actions, preservando la identidad de
-v1.0.0: [infraestructura RS-05 y firma histórica](docs/RS05-DISTRIBUCION.md).
+v1.0.1: [procedimiento RS-05 y firma histórica](docs/RS05-DISTRIBUCION.md).
+
+La gestión AP incluye solicitudes multifecha, bolsas anuales y prórrogas explícitas, estados individuales, edición atómica e histórico. Los turnos permanecen visibles bajo las superposiciones. [Política y migración 1.0.0 → 1.0.1](docs/AP_POLICY_V1.md). La publicación 1.0.1 y la prueba física mediante RobStore están pendientes.

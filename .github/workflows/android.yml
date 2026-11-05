@@ -33,6 +33,7 @@ jobs:
           git diff --check
           python3 scripts/check_rs05_compatibility.py
           python3 -m unittest discover -s scripts -p test_rs05_compatibility.py -v
+          python3 -m unittest discover -s scripts -p test_verify_release.py -v
           python3 scripts/check_distribution_secrets.py
           test -z "$(git ls-files '*.apk' '*.aab' '*.jks' '*.keystore' '*.p12' '*.key')"
       - name: Tests Debug and Release, lint and unsigned builds
