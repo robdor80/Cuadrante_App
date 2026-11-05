@@ -41,3 +41,6 @@ La clave privada no está en GitHub ni en el proyecto; su custodio conserva un r
 `ShiftCalculator(referenceDate, pattern).shiftFor(date)` resuelve fechas pasadas y futuras. La cadencia inicial reutilizable está disponible en `DefaultShiftPatterns.SIX_BY_SIX`.
 
 La cadencia elegida, su secuencia completa y la fecha de referencia se guardan localmente mediante Preferences DataStore.
+
+Distribución futura por Codex Cloud + GitHub Actions, preservando la identidad de
+v1.0.0: [infraestructura RS-05 y firma histórica](docs/RS05-DISTRIBUCION.md).

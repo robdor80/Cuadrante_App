@@ -33,3 +33,7 @@ secrets.properties
 *.apk
 *.apk.idsig
 dist/
+
+# Python verification cache and local audited tooling checkout
+__pycache__/
+.rs05-audit-tooling/
