@@ -18,12 +18,13 @@ def require(ok, message):
 
 def source_identity(root=ROOT):
     gradle = (root/'app/build.gradle.kts').read_text()
-    require(re.search(r'applicationId\s*=\s*"'+re.escape(PACKAGE)+'"', gradle), 'Release package changed')
-    require('applicationIdSuffix = ".debug"' in gradle and 'versionNameSuffix = "-DEV"' in gradle and
+    require(re.findall(r'applicationId\s*=\s*"([^"]+)"', gradle) == [PACKAGE], 'Release package changed or overridden')
+    require(re.findall(r'applicationIdSuffix\s*=\s*"([^"]+)"', gradle) == ['.debug'] and
+            re.findall(r'versionNameSuffix\s*=\s*"([^"]+)"', gradle) == ['-DEV'] and
             'manifestPlaceholders["appLabel"] = "Cuadrante DEV"' in gradle, 'DEV identity changed')
     code = re.search(r'versionCode\s*=\s*(\d+)', gradle)
     name = re.search(r'versionName\s*=\s*"([^"]+)"', gradle)
-    require(code and int(code[1]) >= 1 and name, 'Invalid version')
+    require(code and 1 <= int(code[1]) <= 2100000000 and name and re.fullmatch(r'\d+\.\d+\.\d+', name[1]), 'Invalid version')
     for key, value in [('compileSdk',36), ('minSdk',26), ('targetSdk',36)]:
         require(re.search(r'\b'+key+r'\s*=\s*'+str(value)+r'\b',gradle), 'SDK policy changed')
     data = root/'app/src/main/java/es/robertodorado/cuadrante/data/local'
@@ -51,13 +52,13 @@ def verify_apks(root=ROOT):
         def run(*args): return subprocess.check_output(list(map(str,args)),text=True)
         badging=run(tools/'aapt','dump','badging',apk)
         require(f"package: name='{package}' versionCode='{code}' versionName='{version}'" in badging,'Compiled APK identity/version differs')
-        require(f"application-label:'{label}'" in badging and "sdkVersion:'26'" in badging and "targetSdkVersion:'36'" in badging,'APK label/SDK differs')
+        require(f"application-label:'{label}'" in badging and "sdkVersion:'26'" in badging and "targetSdkVersion:'36'" in badging and "compileSdkVersion='36'" in badging,'APK label/SDK differs')
         require(('application-debuggable' in badging)==(variant=='debug'),'Unexpected debuggable state')
         run(tools/'zipalign','-c','-p','4',apk)
         signature=subprocess.run([str(tools/'apksigner'),'verify',str(apk)],capture_output=True)
         with zipfile.ZipFile(apk) as archive:
             require(not any(re.match(r'META-INF/.*\.(RSA|DSA|EC|SF)$',entry,re.I) for entry in archive.namelist()),'Unexpected JAR signature')
-        require(signature.returncode != 0 and b'APK Sig Block 42' not in apk.read_bytes(),'Normal CI APK must be unsigned')
+        require(signature.returncode != 0 and b'DOES NOT VERIFY' in signature.stderr and b'APK Sig Block 42' not in apk.read_bytes(),'Normal CI APK must be unsigned')
         print(f'{variant}: package/version/label/SDK/alignment/unsigned PASS; SHA-256 {hashlib.sha256(apk.read_bytes()).hexdigest()}')
 
 
