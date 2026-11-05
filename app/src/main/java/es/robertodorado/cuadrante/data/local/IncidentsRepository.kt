@@ -7,6 +7,8 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import es.robertodorado.cuadrante.domain.ap.blocks
+import es.robertodorado.cuadrante.model.*
 import es.robertodorado.cuadrante.model.Incident
 import java.io.IOException
 import kotlinx.coroutines.flow.Flow
@@ -31,18 +33,37 @@ class IncidentsRepository(
         }
 
     suspend fun add(incident: Incident) {
+        require(incident.type != IncidentType.AP) { "Usa AP_POLICY_V1 para solicitar AP" }
         dataStore.edit { preferences ->
-            val current = IncidentsCodec.decode(preferences[INCIDENTS_KEY])
-            preferences[INCIDENTS_KEY] = IncidentsCodec.encode(
-                (current.filterNot { it.id == incident.id } + incident).sortedBy(Incident::firstDate),
-            )
+            val raw = preferences[INCIDENTS_KEY]
+            val current = IncidentsCodec.decode(raw)
+            val ap = ApCodec.importLegacy(ApCodec.decode(preferences[ApRepository.apKey]), current)
+            require(current.none { it.id == incident.id && (it.type == IncidentType.AP || it.type != incident.type) } &&
+                ap.requests.none { it.id == incident.id }) { "El ID pertenece a otra incidencia" }
+            val dates = when (incident) {
+                is DateIncident -> incident.dates.asSequence()
+                is VacationIncident -> generateSequence(incident.startDate) { if (it == incident.endDate) null else it.plusDays(1) }
+                is ApRequest -> error("Tipo incompatible")
+            }
+            require(dates.none { date -> ap.days.any { it.date == date && it.status.consumes } ||
+                current.any { it.id != incident.id && it.type != IncidentType.AP && it.blocks(date) } }) {
+                "Solapamiento con una incidencia existente"
+            }
+            val preserved = raw?.lineSequence()?.filter { line ->
+                IncidentsCodec.decode(line).none { it.id == incident.id }
+            }.orEmpty().toList()
+            preferences[INCIDENTS_KEY] = (preserved + IncidentsCodec.encode(listOf(incident))).joinToString("\n")
         }
     }
 
     suspend fun delete(id: String) {
         dataStore.edit { preferences ->
-            val updated = IncidentsCodec.decode(preferences[INCIDENTS_KEY]).filterNot { it.id == id }
-            preferences[INCIDENTS_KEY] = IncidentsCodec.encode(updated)
+            require(IncidentsCodec.decode(preferences[INCIDENTS_KEY]).none { it.id == id && it.type == IncidentType.AP }) {
+                "Un AP solo puede cancelarse conservando histórico"
+            }
+            preferences[INCIDENTS_KEY] = preferences[INCIDENTS_KEY].orEmpty().lineSequence().filter { line ->
+                IncidentsCodec.decode(line).none { it.id == id }
+            }.joinToString("\n")
         }
     }
 

@@ -4,6 +4,8 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import es.robertodorado.cuadrante.model.DateIncident
 import es.robertodorado.cuadrante.model.IncidentType
 import es.robertodorado.cuadrante.model.VacationIncident
@@ -28,7 +30,8 @@ class IncidentsRepositoryTest {
 
     @Test
     fun `repository adds orders and deletes persisted incidents`() = runBlocking {
-        val repository = IncidentsRepository(InMemoryPreferencesDataStore())
+        val store = InMemoryPreferencesDataStore()
+        val repository = IncidentsRepository(store)
         val ap = DateIncident(
             id = "ap",
             type = IncidentType.AP,
@@ -46,14 +49,15 @@ class IncidentsRepositoryTest {
         )
 
         repository.add(vacation)
-        repository.add(ap)
+        // Seed a real 1.0.0 AP: new AP creation must go through AP_POLICY_V1.
+        store.edit { it[stringPreferencesKey("incidents_v1")] = IncidentsCodec.encode(listOf(ap, vacation)) }
         repository.add(permission)
 
         assertEquals(listOf(permission, ap, vacation), repository.incidents.first())
 
-        repository.delete(ap.id)
+        repository.delete(permission.id)
 
-        assertEquals(listOf(permission, vacation), repository.incidents.first())
+        assertEquals(listOf(ap, vacation), repository.incidents.first())
     }
 
     @Test

@@ -40,6 +40,9 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import es.robertodorado.cuadrante.domain.ap.ApStatus
+import es.robertodorado.cuadrante.ui.theme.statusColor
+import androidx.compose.ui.graphics.luminance
 import es.robertodorado.cuadrante.R
 import es.robertodorado.cuadrante.model.IncidentType
 import es.robertodorado.cuadrante.model.VacationIncident
@@ -75,9 +78,9 @@ fun CalendarScreen(
             } + " " + calendarMonth.yearMonth.year
     }
     val incidentTypesByDate = remember(incidents, calendarMonth.yearMonth) {
-        incidentTypesByDate(
+        incidentMarkersByDate(
             incidents = incidents.map(MonthlyIncidentEntry::incident),
-            yearMonth = calendarMonth.yearMonth,
+            month = calendarMonth.yearMonth,
         )
     }
 
@@ -242,6 +245,8 @@ private fun MonthlyIncidentsCard(
                 fontWeight = FontWeight.SemiBold,
                 style = MaterialTheme.typography.titleMedium,
             )
+            Text("● AP · ▲ Vacaciones · ■ Permiso", style = MaterialTheme.typography.bodySmall)
+            Text("Azul: solicitado · Verde: concedido · Rojo: denegado", style = MaterialTheme.typography.bodySmall)
             if (groups.isEmpty()) {
                 Text(
                     text = stringResource(R.string.calendar_incidents_description),
@@ -276,8 +281,8 @@ private fun MonthlyIncidentRow(
 
     Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
         Text(
-            text = typeLabel,
-            color = group.type.visualColor(),
+            text = IncidentMarker(group.type, ApStatus.CONCEDIDO).symbol + " " + typeLabel,
+            color = MaterialTheme.colorScheme.onSurface,
             fontWeight = FontWeight.SemiBold,
             style = MaterialTheme.typography.labelLarge,
         )
@@ -375,7 +380,7 @@ private fun WeekdayHeader() {
 @Composable
 private fun CalendarDayCell(
     day: CalendarDay,
-    incidentTypes: List<IncidentType>,
+    incidentTypes: List<IncidentMarker>,
     isToday: Boolean,
     locale: Locale,
     modifier: Modifier = Modifier,
@@ -403,7 +408,7 @@ private fun CalendarDayCell(
         shape = shape,
         modifier = modifier
             .border(borderWidth, borderColor, shape)
-            .semantics { contentDescription = dayDescription },
+            .semantics { contentDescription = dayDescription + incidentTypes.joinToString(prefix = ". ") { it.description } },
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.fillMaxSize()) {
@@ -446,14 +451,11 @@ private fun CalendarDayCell(
                     horizontalArrangement = Arrangement.spacedBy(3.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    incidentTypes.forEach { incidentType ->
-                        Box(
-                            modifier = Modifier
-                                .size(INCIDENT_DOT_DIAMETER)
-                                .background(
-                                    color = incidentType.visualColor(),
-                                    shape = MaterialTheme.shapes.extraLarge,
-                                ),
+                    incidentTypes.forEach { marker ->
+                        Text(
+                            text = marker.symbol,
+                            color = marker.status.statusColor(MaterialTheme.colorScheme.surface.luminance() < 0.5f),
+                            style = MaterialTheme.typography.labelSmall,
                         )
                     }
                 }
@@ -463,7 +465,7 @@ private fun CalendarDayCell(
 }
 
 private const val CALENDAR_CELL_ASPECT_RATIO = 0.82f
-private val INCIDENT_DOT_DIAMETER = 6.dp
+private val INCIDENT_DOT_DIAMETER = 14.dp
 private val INCIDENT_NUMBER_GAP = 2.dp
 private val INCIDENT_BAND_GAP = 4.dp
 private val INCIDENT_RESERVED_HEIGHT = INCIDENT_NUMBER_GAP + INCIDENT_DOT_DIAMETER + INCIDENT_BAND_GAP

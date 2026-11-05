@@ -21,6 +21,7 @@ object IncidentsCodec {
     }
 
     private fun encodeIncident(incident: Incident): String = when (incident) {
+        is es.robertodorado.cuadrante.model.ApRequest -> error("AP requests belong to ap_policy_v1")
         is DateIncident -> listOf(
             DATE_RECORD,
             incident.id,
@@ -40,7 +41,7 @@ object IncidentsCodec {
         val fields = record.split(FIELD_SEPARATOR)
         when (fields.firstOrNull()) {
             DATE_RECORD -> {
-                require(fields.size == 4)
+                require(fields.size >= 4)
                 DateIncident(
                     id = fields[1],
                     type = IncidentType.valueOf(fields[2]),
@@ -48,7 +49,7 @@ object IncidentsCodec {
                 )
             }
             RANGE_RECORD -> {
-                require(fields.size == 5)
+                require(fields.size >= 5)
                 require(IncidentType.valueOf(fields[2]) == IncidentType.VACATION)
                 VacationIncident(
                     id = fields[1],

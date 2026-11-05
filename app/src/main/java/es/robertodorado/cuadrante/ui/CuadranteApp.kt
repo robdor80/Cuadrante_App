@@ -63,6 +63,8 @@ import es.robertodorado.cuadrante.ui.calendar.CalendarScreen
 import es.robertodorado.cuadrante.ui.calendar.CalendarViewModel
 import es.robertodorado.cuadrante.ui.calendar.MonthlyCalendarGenerator
 import es.robertodorado.cuadrante.ui.calendar.incidentsForMonth
+import es.robertodorado.cuadrante.ui.incidents.ApViewModel
+import es.robertodorado.cuadrante.ui.incidents.ApSettingsCard
 import es.robertodorado.cuadrante.ui.incidents.IncidentsSettingsCard
 import es.robertodorado.cuadrante.ui.incidents.IncidentsUiState
 import es.robertodorado.cuadrante.ui.incidents.IncidentsViewModel
@@ -82,6 +84,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun CuadranteApp(
+    apViewModel: ApViewModel,
     settingsViewModel: SettingsViewModel,
     calendarViewModel: CalendarViewModel,
     incidentsViewModel: IncidentsViewModel,
@@ -89,6 +92,7 @@ fun CuadranteApp(
 ) {
     val uiState by settingsViewModel.uiState.collectAsState()
     val incidentsUiState by incidentsViewModel.uiState.collectAsState()
+    val apUiState by apViewModel.uiState.collectAsState()
     val visibleMonth by calendarViewModel.visibleMonth.collectAsState()
     var showSettings by rememberSaveable { mutableStateOf(false) }
 
@@ -103,6 +107,7 @@ fun CuadranteApp(
         }
         uiState.savedSettings == null || showSettings -> {
             SettingsScreen(
+                apViewModel = apViewModel,
                 uiState = uiState,
                 canNavigateBack = uiState.savedSettings != null,
                 onBack = { showSettings = false },
@@ -131,8 +136,8 @@ fun CuadranteApp(
                     ),
                 )
             }
-            val monthlyIncidents = remember(incidentsUiState.incidents, visibleMonth) {
-                incidentsForMonth(incidentsUiState.incidents, visibleMonth)
+            val monthlyIncidents = remember(apUiState.incidents, visibleMonth) {
+                incidentsForMonth(apUiState.incidents, visibleMonth)
             }
             CalendarScreen(
                 calendarMonth = calendarMonth,
@@ -166,6 +171,7 @@ private fun SettingsScreen(
     onAddVacation: (LocalDate, LocalDate) -> Unit,
     onDeleteIncident: (String) -> Unit,
     modifier: Modifier = Modifier,
+    apViewModel: ApViewModel? = null,
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
     val backDescription = stringResource(R.string.settings_back_description)
@@ -253,8 +259,13 @@ private fun SettingsScreen(
                     val shiftCalculator = uiState.selectedShifts.takeIf { it.isNotEmpty() }?.let { shifts ->
                         ShiftCalculator(uiState.referenceDate, shifts)
                     }
+                    apViewModel?.let { vm ->
+                        ApSettingsCard(vm, uiState.savedSettings?.let { ShiftCalculator(it.referenceDate, it.shifts) })
+                        Spacer(Modifier.height(14.dp))
+                    }
+                    Text("Histórico de Permisos y Vacaciones", style = MaterialTheme.typography.titleMedium)
                     IncidentsSettingsCard(
-                        uiState = incidentsUiState,
+                        uiState = incidentsUiState.copy(incidents = incidentsUiState.incidents.filter { it.type != IncidentType.AP }),
                         shiftCalculator = shiftCalculator,
                         onAddDates = onAddIncidentDates,
                         onAddVacation = onAddVacation,

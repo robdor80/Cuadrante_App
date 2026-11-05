@@ -45,7 +45,7 @@ class IncidentsViewModel(
     }
 
     fun addDates(type: IncidentType, dates: Collection<LocalDate>) {
-        require(type == IncidentType.AP || type == IncidentType.PERMISSION)
+        require(type == IncidentType.PERMISSION)
         if (dates.isEmpty()) return
         persist(
             DateIncident(

@@ -5,6 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.viewmodel.compose.viewModel
+import es.robertodorado.cuadrante.ui.incidents.ApViewModel
+import es.robertodorado.cuadrante.data.local.ApRepository
 import es.robertodorado.cuadrante.data.local.AppSettingsRepository
 import es.robertodorado.cuadrante.data.local.IncidentsRepository
 import es.robertodorado.cuadrante.data.local.appSettingsDataStore
@@ -36,6 +38,7 @@ class MainActivity : ComponentActivity() {
                     factory = IncidentsViewModel.factory(incidentsRepository),
                 )
                 CuadranteApp(
+                    apViewModel = viewModel(factory = ApViewModel.factory(ApRepository(applicationContext.incidentsDataStore, settingsRepository))),
                     settingsViewModel = settingsViewModel,
                     calendarViewModel = calendarViewModel,
                     incidentsViewModel = incidentsViewModel,
