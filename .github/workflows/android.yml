@@ -1,0 +1,64 @@
+name: Android
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4.0.4
+        with:
+          cmdline-tools-version: '13114758'
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
+      - uses: gradle/actions/setup-gradle@v6.4.1
+      - run: sdkmanager 'platforms;android-36' 'build-tools;35.0.0'
+      - name: Check source identity and persisted data
+        run: |
+          git diff --check
+          python3 scripts/check_rs05_compatibility.py
+          python3 -m unittest discover -s scripts -p test_rs05_compatibility.py -v
+          python3 scripts/check_distribution_secrets.py
+          test -z "$(git ls-files '*.apk' '*.aab' '*.jks' '*.keystore' '*.p12' '*.key')"
+      - name: Tests Debug and Release, lint and unsigned builds
+        run: |
+          chmod +x gradlew
+          ./gradlew -I scripts/unsigned-validation.gradle testDebugUnitTest testReleaseUnitTest lint lintRelease assembleDebug assembleRelease --no-daemon
+          python3 scripts/check_rs05_compatibility.py --apks
+      - name: Checkout audited contract tooling (no production secrets)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: robdor80/RobStore
+          ref: b15d775833c4167c45d79b5b6bb0254db6b0caea
+          path: .rs05-audit-tooling
+          persist-credentials: false
+      - name: Verify catalog against real signed fixture APK
+        env:
+          PYTHONPATH: .rs05-audit-tooling/tools
+        run: python3 -m unittest discover -s scripts -p test_rs05_signed_contract.py -v
+      - name: Test and lint evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: android-validation-${{ github.event.pull_request.head.sha || github.sha }}
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            app/build/test-results/test*UnitTest/TEST-*.xml
+            app/build/reports/tests/
+            app/build/reports/lint-results*

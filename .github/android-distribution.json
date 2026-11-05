@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "repository": "robdor80/Cuadrante_App",
+  "name": "Cuadrante App",
+  "description": "Calendario de turnos local y personalizable, con incidencias, permisos y vacaciones.",
+  "packages": {
+    "release": "es.robertodorado.cuadrante",
+    "dev": "es.robertodorado.cuadrante.debug"
+  },
+  "module": "app",
+  "minSdk": 26,
+  "targetSdk": 36,
+  "robstorePolicy": false,
+  "iconSource": "app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
+  "notesPath": ".github/release-notes.md"
+}
