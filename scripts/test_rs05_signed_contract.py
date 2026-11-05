@@ -53,6 +53,15 @@ class SignedContractTests(unittest.TestCase):
         self.assertEqual(files[catalog['icon']],icon)
         self.assertEqual(actual['sha256'],d.digest(self.apk))
 
+    def test_unsigned_release_rejected(self):
+        with self.assertRaises(ValueError):
+            m.inspect(ROOT/'app/build/outputs/apk/release/app-release-unsigned.apk','release',self.pin,self.settings)
+
+    def test_tampered_signed_bytes_rejected(self):
+        changed=self.folder/'tampered.apk'
+        body=bytearray(self.apk.read_bytes()); body[100]^=1; changed.write_bytes(body)
+        with self.assertRaises(ValueError): m.inspect(changed,'release',self.pin,self.settings)
+
     def test_false_metadata_and_certificate_rejected(self):
         actual=m.inspect(self.apk,'release',self.pin,self.settings)
         for key,value in [('packageName','es.other'),('versionCode',0),('versionName','invented'),('sha256','00'*32)]:

@@ -32,7 +32,7 @@ esa variable al tooling antiguo para distribuir Cuadrante.
 
 ## Firma histórica: procedimiento obligatorio del propietario
 
-Ver [procedimiento central completo de importación y verificación](https://github.com/robdor80/RobStore/blob/codex/rs05-legacy-baseline/docs/RS-05-CUADRANTE-LEGACY.md).
+Ver [procedimiento central completo de importación y verificación](https://github.com/robdor80/RobStore/blob/codex/rs05-compat-audit-20261105/docs/RS-05-CUADRANTE-LEGACY.md).
 Después de fusionar la PR central, consultar ese documento desde el commit
 completo aprobado de RobStore/main y ejecutar su `android_owner_setup.py`.
 La rama del enlace es sólo para revisar esta propuesta, no una fuente de confianza
@@ -40,13 +40,15 @@ para habilitar distribución.
 
 La herramienta nueva acepta `--import-release-keystore` y `--legacy-tag v1.0.0`;
 NO utilizar el modo de generación Release. Ejecutarla personalmente desde
-Android/Termux, jamás Codex/Cloud/CI. Se requieren herramientas Android nativas
-para la arquitectura del teléfono y Java; el documento explica el adaptador de
-rutas para Termux. La disponibilidad en el teléfono debe comprobarla Roberto.
+Android/Termux, jamás Codex/Cloud/CI. La corrección complementaria usa el verificador Java del paquete Termux `apksigner`
+(`$PREFIX/share/java/apksigner.jar`), junto a openjdk-21. No necesita aapt/zipalign
+nativos ni un adaptador ANDROID_HOME para el alta personal. La verificación completa
+del APK en el runner sigue exigiendo todas las comprobaciones SDK/firma/identidad.
 
 El propietario descargará `cuadrante-v1.0.0.apk` de la Release oficial y verificará
 SHA-256 `e514c058212eb1bd11f9747488f82ca22b904de40ce46a250ea93ebe462e362a`.
-Con `apksigner verify --verbose --print-certs` comprobará la huella del certificado:
+Con `java -jar "$PREFIX/share/java/apksigner.jar" verify --verbose --print-certs`
+comprobará la huella del certificado:
 `c85a092878e85a35b8ca84132bdf00314da3e90dae80fc137ac52a27d11491e7`.
 Después exportará sólo el certificado público del keystore recuperado mediante
 `keytool -exportcert` (password por prompt/env, nunca argv) y comparará ambos.
@@ -109,7 +111,26 @@ Secuencia posterior, fuera de esta tarea:
 9. RobStore refresca catálogo: instalada code 1, publicada superior, «Actualización
    disponible». Descargar/entregar al instalador Android y volver a comprobar datos.
 
-Los bloqueos actuales son intencionados: PR central sin fusionar, tooling nuevo
-aún fuera del historial aprobado, secretos/protecciones no configurados, notas
+La adaptación base fue incorporada externamente en RobStore #7 y Cuadrante #2
+durante esta sesión. Quedan por revisar/incorporar las PR complementarias, seleccionar
+su tooling aprobado y realizar el alta personal (su estado privado no se ha inspeccionado).
+Persisten los bloqueos intencionados: notas
 provisionales y code 1 ya utilizado. La comprobación privada de firma y la prueba
 de actualización requieren intervención física de Roberto. No están realizadas.
+
+
+## Auditoría del estado remoto y regresiones adicionales
+
+Referencias iniciales: RobStore b15d775833c4167c45d79b5b6bb0254db6b0caea y Cuadrante
+a7e27c1c34c8cd8ee7425ba766f1fa7a5b7066b7. Durante el trabajo se detectaron fusiones
+externas a ce63ca1a323e0021036d1ca099fa04943f67f398 y
+f1d918f66940d2699c227f9e67afc4eb130e9c75 respectivamente. Sus CI main estaban verdes;
+esta tarea no realizó esas fusiones ni sobrescribió sus ramas. La PR complementaria
+parte del main actual y conserva toda la infraestructura ya añadida.
+
+Las comprobaciones de identidad rechazan también asignaciones duplicadas que cambien
+el paquete Release y conservan de forma única los sufijos DEV. Se valida el compileSdk
+del APK real y se distingue un APK sin firma de un fallo del ejecutable apksigner.
+Se prueban code2/1.1.0 sólo en fixtures aislados, sin incrementar el producto; se añaden
+rechazos de APK sin firma y bytes firmados manipulados al test de contrato real.
+No se cambia app/, robstore.json, notas provisionales ni el pin del motor auditado.
