@@ -12,6 +12,9 @@ import java.io.IOException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 private const val DATA_STORE_NAME = "app_settings"
 
@@ -22,6 +25,8 @@ val Context.appSettingsDataStore: DataStore<Preferences> by preferencesDataStore
 class AppSettingsRepository(
     private val dataStore: DataStore<Preferences>,
 ) {
+    private val mutationMutex = Mutex()
+
     val settings: Flow<AppSettings?> = dataStore.data
         .catch { error ->
             if (error is IOException) {
@@ -39,11 +44,18 @@ class AppSettingsRepository(
         }
 
     suspend fun save(settings: AppSettings) {
-        dataStore.edit { preferences ->
-            preferences[Keys.patternType] = settings.patternType.name
-            preferences[Keys.shiftSequence] = AppSettingsCodec.encodeShiftSequence(settings.shifts)
-            preferences[Keys.referenceDate] = AppSettingsCodec.encodeDate(settings.referenceDate)
+        mutationMutex.withLock {
+            dataStore.edit { preferences ->
+                preferences[Keys.patternType] = settings.patternType.name
+                preferences[Keys.shiftSequence] = AppSettingsCodec.encodeShiftSequence(settings.shifts)
+                preferences[Keys.referenceDate] = AppSettingsCodec.encodeDate(settings.referenceDate)
+            }
         }
+    }
+
+    /** Serializes AP confirmation with shift changes through the shared application repository. */
+    suspend fun <T> withCurrentSettings(block: suspend (AppSettings?) -> T): T = mutationMutex.withLock {
+        block(settings.first())
     }
 
     private object Keys {

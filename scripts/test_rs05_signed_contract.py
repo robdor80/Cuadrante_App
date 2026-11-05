@@ -10,6 +10,7 @@ import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
+import verify_release as verifier
 import distribution as d
 import mobile_distribution as m
 from check_rs05_compatibility import ROOT
@@ -52,6 +53,12 @@ class SignedContractTests(unittest.TestCase):
         self.assertEqual(catalog['description'],self.settings['description'])
         self.assertEqual(files[catalog['icon']],icon)
         self.assertEqual(actual['sha256'],d.digest(self.apk))
+
+    def test_candidate_passes_read_only_release_verifier(self):
+        actual=m.inspect(self.apk,'release',self.pin,self.settings)
+        code,name=__import__('check_rs05_compatibility').source_identity()
+        result=verifier.verify(self.apk,actual,self.pin,code,name,d.tools())
+        self.assertIn(f'{name} ({code})',result)
 
     def test_false_metadata_and_certificate_rejected(self):
         actual=m.inspect(self.apk,'release',self.pin,self.settings)

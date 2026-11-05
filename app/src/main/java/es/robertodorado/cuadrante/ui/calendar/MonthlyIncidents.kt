@@ -1,5 +1,7 @@
 package es.robertodorado.cuadrante.ui.calendar
 
+import es.robertodorado.cuadrante.model.ApRequest
+import es.robertodorado.cuadrante.domain.ap.ApStatus
 import es.robertodorado.cuadrante.model.DateIncident
 import es.robertodorado.cuadrante.model.Incident
 import es.robertodorado.cuadrante.model.IncidentType
@@ -28,6 +30,11 @@ fun incidentsForMonth(
 
     return incidents.mapNotNull { incident ->
         when (incident) {
+            is ApRequest -> {
+                val dates = incident.days.filter { it.status != ApStatus.CANCELADO && YearMonth.from(it.date) == yearMonth }
+                    .map { it.date }.distinct().sorted()
+                dates.takeIf { it.isNotEmpty() }?.let { MonthlyIncidentEntry(incident, it, it.first()) }
+            }
             is DateIncident -> {
                 val datesInMonth = incident.dates.filter { YearMonth.from(it) == yearMonth }
                 datesInMonth.takeIf(List<LocalDate>::isNotEmpty)?.let { dates ->
@@ -88,6 +95,7 @@ fun incidentTypesByDate(
 
     incidents.forEach { incident ->
         val affectedDates = when (incident) {
+            is ApRequest -> incident.days.filter { it.status != ApStatus.CANCELADO && YearMonth.from(it.date) == yearMonth }.map { it.date }
             is DateIncident -> incident.dates.filter { YearMonth.from(it) == yearMonth }
             is VacationIncident -> {
                 val firstDate = maxOf(incident.startDate, monthStart)
@@ -114,3 +122,25 @@ private val MONTHLY_INCIDENT_TYPE_ORDER = listOf(
     IncidentType.PERMISSION,
     IncidentType.VACATION,
 )
+
+/** Marker shape encodes type; status is also exposed to accessibility, independently of color. */
+data class IncidentMarker(val type: IncidentType, val status: ApStatus) {
+    val symbol: String get() = when (type) { IncidentType.AP -> "●"; IncidentType.VACATION -> "▲"; IncidentType.PERMISSION -> "■" }
+    val description: String get() = "${when (type) { IncidentType.AP -> "AP"; IncidentType.VACATION -> "Vacaciones"; IncidentType.PERMISSION -> "Permiso" }}: $status"
+}
+
+fun incidentMarkersByDate(incidents: List<Incident>, month: YearMonth): Map<LocalDate, List<IncidentMarker>> {
+    val result = mutableMapOf<LocalDate, MutableList<IncidentMarker>>()
+    incidents.forEach { incident ->
+        if (incident is ApRequest) {
+            incident.days.filter { it.status != ApStatus.CANCELADO && YearMonth.from(it.date) == month }.forEach { day ->
+                result.getOrPut(day.date, ::mutableListOf).add(IncidentMarker(IncidentType.AP, day.status))
+            }
+        } else {
+            incidentTypesByDate(listOf(incident), month).forEach { (date, types) ->
+                types.forEach { result.getOrPut(date, ::mutableListOf).add(IncidentMarker(it, ApStatus.CONCEDIDO)) }
+            }
+        }
+    }
+    return result.mapValues { it.value.distinct() }
+}

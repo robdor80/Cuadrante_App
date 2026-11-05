@@ -1,5 +1,7 @@
 # Primera publicación de Cuadrante App en RobStore
 
+> Archivo histórico de 1.0.0. Sus versiones, comandos manuales y hashes NO son el procedimiento de 1.0.1. Para la próxima publicación seguir [RS-05 vigente](RS05-DISTRIBUCION.md); no repetir setup, crear claves ni publicar manualmente.
+
 > **Estado actual — 4 de noviembre de 2026:** la Release estable [v1.0.0](https://github.com/robdor80/Cuadrante_App/releases/tag/v1.0.0) **ya está publicada**. La etiqueta apunta al commit `8513721961fd980347bf63c7bc3ab6470cf1d329`; el APK firmado `cuadrante-v1.0.0.apk` fue descargado e instalado correctamente desde RobStore DEV en una Galaxy Tab S9+. La clave se generó en un dispositivo del propietario y su respaldo cifrado está custodiado fuera de GitHub. Esta guía recoge el procedimiento usado y las precauciones para próximas versiones. **No ejecutar de nuevo los comandos de creación/publicación contra `v1.0.0`, no sobrescribir su etiqueta o asset y no reutilizar `versionCode=1` para actualizaciones.** Los textos «pendiente» son históricos. Para la siguiente versión deben revisarse tag, nombre de APK, `robstore.json`, `versionName`, `versionCode` y certificado de firma.
 
 

@@ -202,7 +202,7 @@ private fun AddIncidentDialog(
     onAddDates: (IncidentType, Set<LocalDate>) -> Unit,
     onAddVacation: (LocalDate, LocalDate) -> Unit,
 ) {
-    var selectedType by remember { mutableStateOf(IncidentType.AP) }
+    var selectedType by remember { mutableStateOf(IncidentType.PERMISSION) }
     var visibleMonth by remember { mutableStateOf(YearMonth.now()) }
     var selectedDates by remember { mutableStateOf(emptySet<LocalDate>()) }
     var vacationStart by remember { mutableStateOf<LocalDate?>(null) }
@@ -338,7 +338,7 @@ private fun IncidentTypeSelector(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        IncidentType.entries.forEach { type ->
+        IncidentType.entries.filter { it != IncidentType.AP }.forEach { type ->
             FilterChip(
                 selected = selectedType == type,
                 onClick = { onSelected(type) },
@@ -452,7 +452,7 @@ private enum class VacationDateTarget {
 }
 
 @Composable
-private fun MultiDateCalendar(
+internal fun MultiDateCalendar(
     visibleMonth: YearMonth,
     shiftCalculator: ShiftCalculator,
     selectedDates: Set<LocalDate>,
@@ -530,7 +530,7 @@ private fun SelectableDay(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val selectable = day.shift != ShiftType.OFF
+    val selectable = day.shift in setOf(ShiftType.MORNING, ShiftType.AFTERNOON, ShiftType.NIGHT)
     val colors = day.shift.visualColors()
     val shiftLabel = stringResource(day.shift.labelResource())
     val dateLabel = remember(day.date, locale) {
@@ -633,6 +633,7 @@ private fun incidentTypeLabel(type: IncidentType): String = stringResource(
 private fun formatIncidentDates(incident: Incident, locale: Locale): String {
     val dateFormatter = DateTimeFormatter.ofPattern("d MMM yyyy", locale)
     return when (incident) {
+        is es.robertodorado.cuadrante.model.ApRequest -> incident.days.joinToString { "${it.date}: ${it.status}" }
         is DateIncident -> incident.dates.joinToString(" · ") { it.format(dateFormatter) }
         is VacationIncident -> "${incident.startDate.format(dateFormatter)} – ${incident.endDate.format(dateFormatter)}"
     }
