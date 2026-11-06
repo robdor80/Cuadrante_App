@@ -30,6 +30,7 @@ permissions:
 jobs:
   distribute:
     uses: robdor80/RobStore/.github/workflows/android-distribution-engine.yml@b15d775833c4167c45d79b5b6bb0254db6b0caea
+    secrets: inherit
     permissions:
       contents: write
       actions: read
