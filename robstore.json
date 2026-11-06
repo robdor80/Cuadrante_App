@@ -3,6 +3,8 @@
   "name": "Cuadrante App",
   "description": "Calendario de turnos local y personalizable, con incidencias, permisos y vacaciones.",
   "packageName": "es.robertodorado.cuadrante",
-  "icon": "app/src/main/res/mipmap-xxxhdpi/ic_launcher.png",
-  "apkAssetName": "cuadrante-v1.0.0.apk"
+  "icon": "robstore/icon.png",
+  "apkAssetName": "Android-release.apk",
+  "versionCode": 2,
+  "versionName": "1.0.1"
 }

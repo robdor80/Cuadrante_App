@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "8464755b40d632bdb8c1fd515e680b3630303578",
+  "channel": "release",
+  "certificateSha256": "c85a092878e85a35b8ca84132bdf00314da3e90dae80fc137ac52a27d11491e7",
+  "apkSha256": "304466399cd79d87955f87f728264c95e2be15da0d25b31d701b0e1ed466c13b",
+  "repository": "robdor80/Cuadrante_App",
+  "preparationRun": "42205733256",
+  "tag": "v1.0.1-2"
+}
