@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "channel": "release",
+  "packageName": "es.robertodorado.cuadrante",
+  "versionCode": 3,
+  "versionName": "1.0.2",
+  "apkAssetName": "Android-release.apk",
+  "sha256": "36fca64beda4c77590471ab93d2d59f0679390551ed45c09a83fdab1ea043522"
+}
